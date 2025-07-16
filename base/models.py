@@ -24,7 +24,10 @@ class Classroom(models.Model):
         limit_choices_to={"role": "teacher"},
     )
     students = models.ManyToManyField(
-        User, related_name="classes", limit_choices_to={"role": "student"}
+        User,
+        related_name="classes",
+        limit_choices_to={"role": "student"},
+        blank=True,
     )
 
     def __str__(self):
