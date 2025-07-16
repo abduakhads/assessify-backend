@@ -145,7 +145,7 @@ class StudentQuizAttempt(models.Model):
             self.score = percentage.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
         else:
             self.score = Decimal("0.00")
-        
+
         self.completed_at = timezone.now()
         self.save()
 
@@ -198,7 +198,7 @@ class StudentAnswer(models.Model):
         if (
             self.question_attempt.question.time_limit
             and self.question_attempt.submitted_at - self.question_attempt.started_at
-            > timedelta(seconds=self.question_attempt.question.time_limit)
+            > timedelta(seconds=self.question_attempt.question.time_limit - 2)
         ):
             self.is_correct = False
         else:
@@ -219,13 +219,13 @@ class StudentAnswer(models.Model):
         ]
 
     def clean(self):
-        super().clean()
         if self.question_attempt.question is None:
             raise ValidationError("Question not found in the attempt.")
         if self.question_attempt.submitted_at is None:
             raise ValidationError(
                 "Cannot add an answer before the question attempt is submitted."
             )
+        super().clean()
 
     def __str__(self):
         return f"{self.question_attempt.quiz_attempt.student} - {self.question_attempt.question.text[:50]}: {self.text} ({'Correct' if self.is_correct else 'Incorrect'})"
