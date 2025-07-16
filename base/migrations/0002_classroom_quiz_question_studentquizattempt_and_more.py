@@ -8,91 +8,235 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('base', '0001_initial'),
+        ("base", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Classroom',
+            name="Classroom",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=100)),
-                ('students', models.ManyToManyField(limit_choices_to={'role': 'student'}, related_name='classes', to=settings.AUTH_USER_MODEL)),
-                ('teacher', models.ForeignKey(limit_choices_to={'role': 'teacher'}, on_delete=django.db.models.deletion.CASCADE, related_name='classrooms', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=100)),
+                (
+                    "students",
+                    models.ManyToManyField(
+                        limit_choices_to={"role": "student"},
+                        related_name="classes",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "teacher",
+                    models.ForeignKey(
+                        limit_choices_to={"role": "teacher"},
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="classrooms",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='Quiz',
+            name="Quiz",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('title', models.CharField(max_length=255)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('deadline', models.DateTimeField(blank=True, null=True)),
-                ('is_active', models.BooleanField(default=True)),
-                ('allowed_attempts', models.PositiveIntegerField(default=1)),
-                ('classroom', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='quizzes', to='base.classroom')),
-                ('teacher', models.ForeignKey(limit_choices_to={'role': 'teacher'}, on_delete=django.db.models.deletion.CASCADE, related_name='quizzes', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("title", models.CharField(max_length=255)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("deadline", models.DateTimeField(blank=True, null=True)),
+                ("is_active", models.BooleanField(default=True)),
+                ("allowed_attempts", models.PositiveIntegerField(default=1)),
+                (
+                    "classroom",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="quizzes",
+                        to="base.classroom",
+                    ),
+                ),
+                (
+                    "teacher",
+                    models.ForeignKey(
+                        limit_choices_to={"role": "teacher"},
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="quizzes",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='Question',
+            name="Question",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('text', models.TextField()),
-                ('order', models.PositiveIntegerField(default=0)),
-                ('has_multiple_answers', models.BooleanField(default=False)),
-                ('is_written', models.BooleanField(default=False)),
-                ('time_limit', models.PositiveIntegerField(default=0)),
-                ('quiz', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='questions', to='base.quiz')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("text", models.TextField()),
+                ("order", models.PositiveIntegerField(default=0)),
+                ("has_multiple_answers", models.BooleanField(default=False)),
+                ("is_written", models.BooleanField(default=False)),
+                ("time_limit", models.PositiveIntegerField(default=0)),
+                (
+                    "quiz",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="questions",
+                        to="base.quiz",
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='StudentQuizAttempt',
+            name="StudentQuizAttempt",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('started_at', models.DateTimeField(auto_now_add=True)),
-                ('completed_at', models.DateTimeField(blank=True, null=True)),
-                ('score', models.FloatField(default=0.0)),
-                ('quiz', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='base.quiz')),
-                ('student', models.ForeignKey(limit_choices_to={'role': 'student'}, on_delete=django.db.models.deletion.CASCADE, related_name='quiz_attempts', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("started_at", models.DateTimeField(auto_now_add=True)),
+                ("completed_at", models.DateTimeField(blank=True, null=True)),
+                ("score", models.FloatField(default=0.0)),
+                (
+                    "quiz",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, to="base.quiz"
+                    ),
+                ),
+                (
+                    "student",
+                    models.ForeignKey(
+                        limit_choices_to={"role": "student"},
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="quiz_attempts",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='StudentQuestionAttempt',
+            name="StudentQuestionAttempt",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('started_at', models.DateTimeField(auto_now_add=True)),
-                ('submitted_at', models.DateTimeField(blank=True, null=True)),
-                ('question', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='base.question')),
-                ('quiz_attempt', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='question_attempts', to='base.studentquizattempt')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("started_at", models.DateTimeField(auto_now_add=True)),
+                ("submitted_at", models.DateTimeField(blank=True, null=True)),
+                (
+                    "question",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, to="base.question"
+                    ),
+                ),
+                (
+                    "quiz_attempt",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="question_attempts",
+                        to="base.studentquizattempt",
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='Answer',
+            name="Answer",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('text', models.CharField(max_length=255)),
-                ('is_correct', models.BooleanField(default=False)),
-                ('question', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='answers', to='base.question')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("text", models.CharField(max_length=255)),
+                ("is_correct", models.BooleanField(default=False)),
+                (
+                    "question",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="answers",
+                        to="base.question",
+                    ),
+                ),
             ],
             options={
-                'constraints': [models.UniqueConstraint(fields=('question', 'text'), name='unique_answer_per_question')],
+                "constraints": [
+                    models.UniqueConstraint(
+                        fields=("question", "text"), name="unique_answer_per_question"
+                    )
+                ],
             },
         ),
         migrations.CreateModel(
-            name='StudentAnswer',
+            name="StudentAnswer",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('text', models.CharField(max_length=255)),
-                ('is_correct', models.BooleanField(default=False)),
-                ('question_attempt', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='student_answers', to='base.studentquestionattempt')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("text", models.CharField(max_length=255)),
+                ("is_correct", models.BooleanField(default=False)),
+                (
+                    "question_attempt",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="student_answers",
+                        to="base.studentquestionattempt",
+                    ),
+                ),
             ],
             options={
-                'constraints': [models.UniqueConstraint(fields=('question_attempt', 'text'), name='unique_StudentAnswer_per_StudentQuestionAttempt')],
+                "constraints": [
+                    models.UniqueConstraint(
+                        fields=("question_attempt", "text"),
+                        name="unique_StudentAnswer_per_StudentQuestionAttempt",
+                    )
+                ],
             },
         ),
         migrations.AddConstraint(
-            model_name='studentquestionattempt',
-            constraint=models.UniqueConstraint(fields=('quiz_attempt', 'question'), name='unique_StudentQuestionAttempt_per_question'),
+            model_name="studentquestionattempt",
+            constraint=models.UniqueConstraint(
+                fields=("quiz_attempt", "question"),
+                name="unique_StudentQuestionAttempt_per_question",
+            ),
         ),
     ]
