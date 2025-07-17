@@ -47,12 +47,6 @@ class Quiz(models.Model):
     classroom = models.ForeignKey(
         Classroom, on_delete=models.CASCADE, related_name="quizzes"
     )
-    teacher = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name="quizzes",
-        limit_choices_to={"role": "teacher"},
-    )
     created_at = models.DateTimeField(auto_now_add=True)
     deadline = models.DateTimeField(null=True, blank=True)
     is_active = models.BooleanField(default=True)

@@ -59,9 +59,7 @@ class QuizModelTest(TestCase):
         self.classroom = Classroom.objects.create(name="Math", teacher=self.teacher)
 
     def test_create_quiz(self):
-        quiz = Quiz.objects.create(
-            title="Quiz 1", classroom=self.classroom, teacher=self.teacher
-        )
+        quiz = Quiz.objects.create(title="Quiz 1", classroom=self.classroom)
         self.assertEqual(str(quiz), "Quiz 1")
         self.assertEqual(quiz.question_count(), 0)
 
@@ -69,7 +67,6 @@ class QuizModelTest(TestCase):
         quiz = Quiz(
             title="Quiz 2",
             classroom=self.classroom,
-            teacher=self.teacher,
             allowed_attempts=0,
         )
         with self.assertRaises(ValidationError):
@@ -82,9 +79,7 @@ class QuestionModelTest(TestCase):
             username="teacher", password="pass", role=User.Role.TEACHER
         )
         self.classroom = Classroom.objects.create(name="Math", teacher=self.teacher)
-        self.quiz = Quiz.objects.create(
-            title="Quiz 1", classroom=self.classroom, teacher=self.teacher
-        )
+        self.quiz = Quiz.objects.create(title="Quiz 1", classroom=self.classroom)
 
     def test_create_question_and_order(self):
         q1 = Question.objects.create(quiz=self.quiz, text="Q1")
@@ -107,9 +102,7 @@ class AnswerModelTest(TestCase):
             username="teacher", password="pass", role=User.Role.TEACHER
         )
         self.classroom = Classroom.objects.create(name="Math", teacher=self.teacher)
-        self.quiz = Quiz.objects.create(
-            title="Quiz 1", classroom=self.classroom, teacher=self.teacher
-        )
+        self.quiz = Quiz.objects.create(title="Quiz 1", classroom=self.classroom)
         self.question = Question.objects.create(quiz=self.quiz, text="Q1")
 
     def test_unique_answer_per_question(self):
@@ -127,9 +120,7 @@ class StudentQuizAttemptModelTest(TestCase):
             username="student", password="pass", role=User.Role.STUDENT
         )
         self.classroom = Classroom.objects.create(name="Math", teacher=self.teacher)
-        self.quiz = Quiz.objects.create(
-            title="Quiz 1", classroom=self.classroom, teacher=self.teacher
-        )
+        self.quiz = Quiz.objects.create(title="Quiz 1", classroom=self.classroom)
         self.question = Question.objects.create(quiz=self.quiz, text="Q1")
         self.quiz_attempt = StudentQuizAttempt.objects.create(
             student=self.student, quiz=self.quiz
@@ -168,9 +159,7 @@ class StudentQuestionAttemptModelTest(TestCase):
             username="student", password="pass", role=User.Role.STUDENT
         )
         self.classroom = Classroom.objects.create(name="Math", teacher=self.teacher)
-        self.quiz = Quiz.objects.create(
-            title="Quiz 1", classroom=self.classroom, teacher=self.teacher
-        )
+        self.quiz = Quiz.objects.create(title="Quiz 1", classroom=self.classroom)
         self.question = Question.objects.create(quiz=self.quiz, text="Q1")
         self.quiz_attempt = StudentQuizAttempt.objects.create(
             student=self.student, quiz=self.quiz
@@ -186,9 +175,7 @@ class StudentQuestionAttemptModelTest(TestCase):
             )
 
     def test_invalid_question_quiz(self):
-        other_quiz = Quiz.objects.create(
-            title="Quiz 2", classroom=self.classroom, teacher=self.teacher
-        )
+        other_quiz = Quiz.objects.create(title="Quiz 2", classroom=self.classroom)
         other_question = Question.objects.create(quiz=other_quiz, text="Q2")
         attempt = StudentQuestionAttempt(
             quiz_attempt=self.quiz_attempt, question=other_question
@@ -206,9 +193,7 @@ class StudentAnswerModelTest(TestCase):
             username="student", password="pass", role=User.Role.STUDENT
         )
         self.classroom = Classroom.objects.create(name="Math", teacher=self.teacher)
-        self.quiz = Quiz.objects.create(
-            title="Quiz 1", classroom=self.classroom, teacher=self.teacher
-        )
+        self.quiz = Quiz.objects.create(title="Quiz 1", classroom=self.classroom)
         self.question = Question.objects.create(
             quiz=self.quiz, text="Q1", time_limit=60
         )
