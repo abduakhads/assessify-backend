@@ -28,10 +28,17 @@ from rest_framework_simplejwt.views import (
     TokenBlacklistView,
 )
 
+from base import views as base_views
+
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", include("api.urls")),
     path("auth/", include("djoser.urls")),
+    path(
+        "auth/activate/<str:uidb64>/<str:token>",
+        base_views.activate_user,
+        name="activate_user",
+    ),
     path("token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("token/blacklist/", TokenBlacklistView.as_view(), name="token_blacklist"),
