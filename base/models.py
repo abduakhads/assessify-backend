@@ -78,6 +78,8 @@ class Question(models.Model):
                 models.Max("order")
             )["order__max"]
             self.order = (max_order or 0) + 1
+        else:
+            self.order = Quiz.objects.get(id=self.quiz.id).questions.count() + 1
         super().save(*args, **kwargs)
 
     def get_correct_answers(self):
