@@ -78,8 +78,8 @@ class Question(models.Model):
                 models.Max("order")
             )["order__max"]
             self.order = (max_order or 0) + 1
-        else:
-            self.order = Quiz.objects.get(id=self.quiz.id).questions.count() + 1
+        # else:
+        #     self.order = Quiz.objects.get(id=self.quiz.id).questions.count() + 1
         super().save(*args, **kwargs)
 
     def get_correct_answers(self):
@@ -125,7 +125,9 @@ class StudentQuizAttempt(models.Model):
     score = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
 
     def get_next_question(self):
-        attempted_ids = self.question_attempts.values_list("question_id", flat=True)
+        attempted_ids = self.question_attempts.filter(
+            submitted_at__isnull=False
+        ).values_list("question_id", flat=True)
         return (
             self.quiz.questions.exclude(id__in=attempted_ids).order_by("order").first()
         )

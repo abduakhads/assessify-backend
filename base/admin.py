@@ -102,7 +102,7 @@ class QuestionAdmin(admin.ModelAdmin):
     list_display_links = ("text",)
     list_filter = ("quiz", "has_multiple_answers", "is_written")
     search_fields = ("text",)
-    readonly_fields = ("order",)
+    # readonly_fields = ("order",)
 
 
 @admin.register(Answer)
