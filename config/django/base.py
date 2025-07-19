@@ -171,6 +171,17 @@ SPECTACULAR_SETTINGS = {
     "DESCRIPTION": "Assessly backend",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
+    "TAGS": [
+        {"name": "token"},
+        {"name": "Classroom"},
+        {"name": "Quiz"},
+        {"name": "Question"},
+        {"name": "Answer"},
+        {"name": "Student Quiz Attempt"},
+        {"name": "Student Question Attempt"},
+        {"name": "Student Answer Submit"},
+        {"name": "auth"},
+    ],
 }
 
 AUTH_USER_MODEL = "base.User"
