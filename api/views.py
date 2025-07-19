@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from drf_spectacular.utils import extend_schema
 from django.utils import timezone
+from rest_framework.exceptions import ValidationError
 
 from base.permissions import IsTeacher, IsStudent
 from base import serializers as base_srlzs
@@ -49,6 +50,13 @@ class QuizViewSet(viewsets.ModelViewSet):
     queryset = Quiz.objects.all()
     serializer_class = base_srlzs.QuizSerializer
     permission_classes = [permissions.IsAuthenticated]
+    filterset_fields = ["classroom"]
+
+    def filter_queryset(self, queryset):
+        try:
+            return super().filter_queryset(queryset)
+        except ValidationError as e:
+            return queryset.none()
 
     def get_permissions(self):
         if self.action not in ["list", "retrieve", "quizzes_by_classroom"]:
@@ -79,18 +87,19 @@ class QuizViewSet(viewsets.ModelViewSet):
             )
         return super().create(request, *args, **kwargs)
 
-    @action(detail=False, methods=["get"], url_path=r"classroom/(?P<id>\d+)")
-    def quizzes_by_classroom(self, request, id=None):
-        quizzes = self.get_queryset().filter(classroom__id=id)
-        serializer = self.get_serializer(quizzes, many=True)
-        return Response(serializer.data)
-
 
 @extend_schema(tags=["Question"])
 class QuestionViewSet(viewsets.ModelViewSet):
     queryset = Question.objects.all()
     serializer_class = base_srlzs.QuestionSerializer
     permission_classes = [permissions.IsAuthenticated]
+    filterset_fields = ["quiz"]
+
+    def filter_queryset(self, queryset):
+        try:
+            return super().filter_queryset(queryset)
+        except ValidationError as e:
+            return queryset.none()
 
     def get_permissions(self):
         if self.action not in ["retrieve"]:
@@ -123,18 +132,19 @@ class QuestionViewSet(viewsets.ModelViewSet):
             )
         return super().create(request, *args, **kwargs)
 
-    @action(detail=False, methods=["get"], url_path=r"quiz/(?P<id>\d+)")
-    def questions_by_quiz(self, request, id=None):
-        questions = self.get_queryset().filter(quiz__id=id)
-        serializer = self.get_serializer(questions, many=True)
-        return Response(serializer.data)
-
 
 @extend_schema(tags=["Answer"])
 class AnswerViewSet(viewsets.ModelViewSet):
     queryset = Answer.objects.all()
     serializer_class = base_srlzs.AnswerSerializer
     permission_classes = [permissions.IsAuthenticated]
+    filterset_fields = ["question"]
+
+    def filter_queryset(self, queryset):
+        try:
+            return super().filter_queryset(queryset)
+        except ValidationError as e:
+            return queryset.none()
 
     def get_permissions(self):
         if self.action not in ["retrieve"]:
@@ -167,12 +177,6 @@ class AnswerViewSet(viewsets.ModelViewSet):
             )
         return super().create(request, *args, **kwargs)
 
-    @action(detail=False, methods=["get"], url_path=r"question/(?P<id>\d+)")
-    def answers_by_question(self, request, id=None):
-        answers = self.get_queryset().filter(question__id=id)
-        serializer = self.get_serializer(answers, many=True)
-        return Response(serializer.data)
-
 
 @extend_schema(tags=["Student Quiz Attempt"])
 class StudentQuizAttemptViewSet(
@@ -184,6 +188,13 @@ class StudentQuizAttemptViewSet(
     queryset = StudentQuizAttempt.objects.all()
     serializer_class = base_srlzs.StudentQuizAttemptSerializer
     permission_classes = [permissions.IsAuthenticated, IsStudent]
+    filterset_fields = ["quiz"]
+
+    def filter_queryset(self, queryset):
+        try:
+            return super().filter_queryset(queryset)
+        except ValidationError as e:
+            return queryset.none()
 
     def get_queryset(self):
         return super().get_queryset().filter(student=self.request.user)
@@ -240,12 +251,6 @@ class StudentQuizAttemptViewSet(
             attempt.completed_at = timezone.now()
             attempt.calculate_score()
             attempt.save()
-        return Response(serializer.data)
-
-    @action(detail=False, methods=["get"], url_path=r"classroom/(?P<id>\d+)")
-    def get_classroom_quiz_attempts(self, request, id=None):
-        attempts = self.get_queryset().filter(quiz__classroom__id=id)
-        serializer = self.get_serializer(attempts, many=True)
         return Response(serializer.data)
 
 
