@@ -5,6 +5,7 @@ from drf_spectacular.utils import extend_schema
 from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 from django import shortcuts
+from django.db.models import OuterRef, Subquery, Exists
 
 from base.permissions import IsTeacher, IsStudent
 from base import serializers as base_srlzs
@@ -109,8 +110,8 @@ class QuizViewSet(viewsets.ModelViewSet):
             )
         if classroom.teacher != request.user:
             return Response(
-                {"detail": "You can only create quizzes for your own classrooms."},
-                status=status.HTTP_403_FORBIDDEN,
+                {"detail": "Classroom does not exist."},
+                status=status.HTTP_400_BAD_REQUEST,
             )
         return super().create(request, *args, **kwargs)
 
@@ -154,8 +155,8 @@ class QuestionViewSet(viewsets.ModelViewSet):
 
         if quiz.classroom.teacher != request.user:
             return Response(
-                {"detail": "You can only create questions for your own quizzes."},
-                status=status.HTTP_403_FORBIDDEN,
+                {"detail": "Quiz does not exist."},
+                status=status.HTTP_400_BAD_REQUEST,
             )
         return super().create(request, *args, **kwargs)
 
@@ -199,8 +200,8 @@ class AnswerViewSet(viewsets.ModelViewSet):
 
         if question.quiz.classroom.teacher != request.user:
             return Response(
-                {"detail": "You can only create answers for your own questions."},
-                status=status.HTTP_403_FORBIDDEN,
+                {"detail": "Question does not exist."},
+                status=status.HTTP_400_BAD_REQUEST,
             )
         return super().create(request, *args, **kwargs)
 
@@ -280,6 +281,19 @@ class StudentQuizAttemptViewSet(
             attempt.save()
         return Response(serializer.data)
 
+    @action(detail=False, methods=["get"], url_path="archived")
+    def archived(self, request):
+        classroom_students = Classroom.students.through.objects.filter(
+            classroom_id=OuterRef("quiz__classroom_id"), user_id=OuterRef("student_id")
+        )
+
+        # Select attempts where that match doesn't exist
+        archived_quiz_attempts = StudentQuizAttempt.objects.annotate(
+            is_in_classroom=Exists(classroom_students)
+        ).filter(is_in_classroom=False)
+        serializer = self.get_serializer(archived_quiz_attempts, many=True)
+        return Response(serializer.data)
+
 
 @extend_schema(tags=["Student Answer Submit"])
 class StudentAnswerSubmitViewSet(generics.CreateAPIView):
@@ -300,8 +314,8 @@ class StudentAnswerSubmitViewSet(generics.CreateAPIView):
             )
         if question_attempt.quiz_attempt.student != self.request.user:
             return Response(
-                {"detail": "You can only submit answers for your own attempts."},
-                status=status.HTTP_403_FORBIDDEN,
+                {"detail": "Question attempt does not exist."},
+                status=status.HTTP_400_BAD_REQUEST,
             )
         if question_attempt.submitted_at is not None:
             return Response(
