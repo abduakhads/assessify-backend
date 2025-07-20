@@ -194,23 +194,26 @@ class StudentAnswer(models.Model):
     text = models.CharField(max_length=255)
     is_correct = models.BooleanField(default=False)
 
-    def save(self, *args, **kwargs):
+    def _calculate_correctness(self):
         if self.text:
             self.text = self.text.strip()
 
         if (
             self.question_attempt.question.time_limit
+            and self.question_attempt.submitted_at is not None
             and self.question_attempt.submitted_at - self.question_attempt.started_at
             > timedelta(seconds=self.question_attempt.question.time_limit - 2)
         ):
-            self.is_correct = False
+            return False
         else:
-            self.is_correct = (
+            return (
                 self.question_attempt.question.get_correct_answers()
                 .filter(text__iexact=self.text)
                 .exists()
             )
 
+    def save(self, *args, **kwargs):
+        self.is_correct = self._calculate_correctness()
         super().save(*args, **kwargs)
 
     class Meta:

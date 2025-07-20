@@ -120,7 +120,7 @@ class QuizViewSet(viewsets.ModelViewSet):
 class QuestionViewSet(viewsets.ModelViewSet):
     queryset = Question.objects.all()
     serializer_class = base_srlzs.QuestionSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsTeacher]
     filterset_fields = ["quiz"]
 
     def filter_queryset(self, queryset):
@@ -129,10 +129,10 @@ class QuestionViewSet(viewsets.ModelViewSet):
         except ValidationError as e:
             return queryset.none()
 
-    def get_permissions(self):
-        if self.action not in ["retrieve"]:
-            return [IsTeacher()]
-        return super().get_permissions()
+    # def get_permissions(self):
+    #     if self.action not in ["retrieve"]:
+    #         return [IsTeacher()]
+    #     return super().get_permissions()
 
     def get_queryset(self):
         qs = super().get_queryset()
@@ -165,7 +165,7 @@ class QuestionViewSet(viewsets.ModelViewSet):
 class AnswerViewSet(viewsets.ModelViewSet):
     queryset = Answer.objects.all()
     serializer_class = base_srlzs.AnswerSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsTeacher]
     filterset_fields = ["question"]
 
     def filter_queryset(self, queryset):
@@ -174,10 +174,10 @@ class AnswerViewSet(viewsets.ModelViewSet):
         except ValidationError as e:
             return queryset.none()
 
-    def get_permissions(self):
-        if self.action not in ["retrieve"]:
-            return [IsTeacher()]
-        return super().get_permissions()
+    # def get_permissions(self):
+    #     if self.action not in ["retrieve"]:
+    #         return [IsTeacher()]
+    #     return super().get_permissions()
 
     def get_queryset(self):
         qs = super().get_queryset()
@@ -333,10 +333,12 @@ class StudentAnswerSubmitViewSet(generics.CreateAPIView):
         question_attempt.submitted_at = timezone.now()
         question_attempt.save()
 
-        student_answers = [
-            StudentAnswer(question_attempt=question_attempt, text=answer)
-            for answer in request.data.get("answers")
-        ]
+        student_answers = []
+        for answer_text in request.data.get("answers"):
+            answer = StudentAnswer(question_attempt=question_attempt, text=answer_text)
+            answer.is_correct = answer._calculate_correctness()
+            student_answers.append(answer)
+
         StudentAnswer.objects.bulk_create(student_answers)
 
         return Response(
