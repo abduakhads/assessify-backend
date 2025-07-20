@@ -78,8 +78,6 @@ class QuizAdmin(admin.ModelAdmin):
         "id",
         "title",
         "classroom",
-        "created_at",
-        "deadline",
         "is_active",
         "allowed_attempts",
     )
@@ -116,7 +114,7 @@ class AnswerAdmin(admin.ModelAdmin):
 
 @admin.register(StudentQuizAttempt)
 class StudentQuizAttemptAdmin(admin.ModelAdmin):
-    list_display = ("id", "student", "quiz", "score", "started_at", "completed_at")
+    list_display = ("id", "student", "quiz", "score")
     list_display_links = ("student", "quiz")
     list_filter = ("quiz", "student")
     search_fields = ("student__username", "quiz__title")
@@ -125,17 +123,25 @@ class StudentQuizAttemptAdmin(admin.ModelAdmin):
 
 @admin.register(StudentQuestionAttempt)
 class StudentQuestionAttemptAdmin(admin.ModelAdmin):
-    list_display = ("id", "quiz_attempt", "question", "started_at", "submitted_at")
-    list_display_links = ("quiz_attempt", "question")
+    list_display = ("id", "question", "quiz_attempt", "time_taken_in_seconds")
+    list_display_links = ("question",)
     list_filter = ("quiz_attempt__quiz", "question")
     search_fields = ("quiz_attempt__student__username", "question__text")
     readonly_fields = ("started_at",)  # add completed_at
 
+    def time_taken_in_seconds(self, obj):
+        if obj.started_at and obj.submitted_at:
+            time_diff = obj.submitted_at - obj.started_at
+            return round(time_diff.total_seconds())
+        return 0
+
+    time_taken_in_seconds.short_description = "Time Taken (Seconds)"
+
 
 @admin.register(StudentAnswer)
 class StudentAnswerAdmin(admin.ModelAdmin):
-    list_display = ("id", "question_attempt", "text", "is_correct")
-    list_display_links = ("question_attempt", "text")
+    list_display = ("id", "text", "question_attempt", "is_correct")
+    list_display_links = ("text",)
     list_filter = ("is_correct",)
     search_fields = ("text", "question_attempt__question__text")
     readonly_fields = ("is_correct",)

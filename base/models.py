@@ -135,7 +135,7 @@ class StudentQuizAttempt(models.Model):
         )
 
     def __str__(self):
-        return f"{self.student} - {self.quiz}"
+        return f"attempt #{self.id}"
 
     # TODO: IMPLEMET MULPITPLE GRADING SYSTEMS + DECREMENT FOR INCORRECT ANSWERS
     def calculate_score(self):
@@ -177,7 +177,7 @@ class StudentQuestionAttempt(models.Model):
         ]
 
     def __str__(self):
-        return f"{self.quiz_attempt.student} - {self.question.text[:50]}"
+        return f"{self.id}. {self.quiz_attempt.student} - {self.question.text[:50]}"
 
     def clean(self):
         super().clean()
@@ -234,7 +234,7 @@ class StudentAnswer(models.Model):
         super().clean()
 
     def __str__(self):
-        return f"{self.question_attempt.quiz_attempt.student} - {self.question_attempt.question.text[:50]}: {self.text} ({'Correct' if self.is_correct else 'Incorrect'})"
+        return f"{self.id}. {self.question_attempt.quiz_attempt.student} - {self.question_attempt.question.text[:50]}: {self.text} ({'Correct' if self.is_correct else 'Incorrect'})"
 
 
 class EnrollmentCode(models.Model):
@@ -259,4 +259,4 @@ class EnrollmentCode(models.Model):
         return enrollment_code
 
     def __str__(self):
-        return f"{self.code} - {self.classroom.name}"
+        return f"{self.code} - {self.classroom.id}. {self.classroom.name}"
