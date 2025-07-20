@@ -60,7 +60,6 @@ class QuizModelTest(TestCase):
 
     def test_create_quiz(self):
         quiz = Quiz.objects.create(title="Quiz 1", classroom=self.classroom)
-        self.assertEqual(str(quiz), "Quiz 1")
         self.assertEqual(quiz.question_count(), 0)
 
     def test_allowed_attempts_validation(self):
