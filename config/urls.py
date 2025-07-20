@@ -46,3 +46,8 @@ urlpatterns = [
     path("", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
     path("redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"),
 ]
+
+from django.conf import settings
+
+if "silk" in settings.INSTALLED_APPS:
+    urlpatterns += [path("silk/", include("silk.urls", namespace="silk"))]
