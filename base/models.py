@@ -33,7 +33,7 @@ class Classroom(models.Model):
     )
 
     def __str__(self):
-        return self.name
+        return f"{self.id}. {self.name}"
 
     def student_count(self):
         return self.students.count()
@@ -55,7 +55,7 @@ class Quiz(models.Model):
     allowed_attempts = models.PositiveIntegerField(default=1)
 
     def __str__(self):
-        return self.title
+        return f"{self.id}. {self.title}"
 
     def question_count(self):
         return self.questions.count()
@@ -88,7 +88,7 @@ class Question(models.Model):
         return self.answers.filter(is_correct=True)
 
     def __str__(self):
-        return f"{self.quiz} - {self.order}. {self.text[:50]}"
+        return f"{self.id}. {self.text[:50]}"
 
 
 class Answer(models.Model):
@@ -111,7 +111,7 @@ class Answer(models.Model):
         ]
 
     def __str__(self):
-        return self.text
+        return f"{self.id}. {self.text[:50]}"
 
 
 class StudentQuizAttempt(models.Model):
@@ -177,7 +177,7 @@ class StudentQuestionAttempt(models.Model):
         ]
 
     def __str__(self):
-        return f"{self.quiz_attempt.student} - {self.question.order}. {self.question.text[:50]}"
+        return f"{self.quiz_attempt.student} - {self.question.text[:50]}"
 
     def clean(self):
         super().clean()
