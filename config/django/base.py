@@ -174,6 +174,7 @@ SPECTACULAR_SETTINGS = {
     "SERVE_INCLUDE_SCHEMA": False,
     "TAGS": [
         {"name": "token"},
+        {"name": "Enrollment"},
         {"name": "Classroom"},
         {"name": "Quiz"},
         {"name": "Question"},

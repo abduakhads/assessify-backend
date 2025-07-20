@@ -4,6 +4,7 @@ from rest_framework.decorators import action
 from drf_spectacular.utils import extend_schema
 from django.utils import timezone
 from rest_framework.exceptions import ValidationError
+from django import shortcuts
 
 from base.permissions import IsTeacher, IsStudent
 from base import serializers as base_srlzs
@@ -16,6 +17,7 @@ from base.models import (
     StudentQuizAttempt,
     StudentQuestionAttempt,
     StudentAnswer,
+    EnrollmentCode,
 )
 
 
@@ -25,24 +27,49 @@ class ClassroomViewSet(viewsets.ModelViewSet):
     serializer_class = base_srlzs.ClassroomSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    def get_serializer_class(self):
+        if self.action == "delete_students":
+            return base_srlzs.ClassroomDeleteStudentsSerializer
+        return super().get_serializer_class()
+
     def get_permissions(self):
         if self.action not in ["list", "retrieve"]:
             return [IsTeacher()]
         return super().get_permissions()
 
     def perform_create(self, serializer):
-        serializer.save(teacher=self.request.user)
+        classroom = serializer.save(teacher=self.request.user)
+        EnrollmentCode.generate_for_class(classroom)
 
     def get_queryset(self):
         qs = super().get_queryset()
-        if self.request.user.is_staff:
-            return qs
-        elif self.request.user.role == User.Role.TEACHER:
+        if self.request.user.role == User.Role.TEACHER:
             return qs.filter(teacher=self.request.user)
         elif self.request.user.role == User.Role.STUDENT:
             return qs.filter(students=self.request.user)
         else:
             return qs.none()
+
+    @action(detail=True, methods=["post"], url_path="delete-students")
+    def delete_students(self, request, pk=None):
+        classroom = self.get_object()
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        student_ids = serializer.validated_data["student_ids"]
+        students = User.objects.filter(id__in=student_ids, role=User.Role.STUDENT)
+
+        if not students.exists():
+            return Response(
+                {"detail": "No valid students found."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        classroom.students.remove(*students)
+        return Response(
+            {"detail": "Students removed successfully."},
+            status=status.HTTP_204_NO_CONTENT,
+        )
 
 
 @extend_schema(tags=["Quiz"])
@@ -300,5 +327,58 @@ class StudentAnswerSubmitViewSet(generics.CreateAPIView):
 
         return Response(
             {"detail": "Answers submitted successfully."},
+            status=status.HTTP_201_CREATED,
+        )
+
+
+@extend_schema(tags=["Enrollment"])
+class EnrollmentCodeViewSet(
+    mixins.UpdateModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet
+):
+    queryset = EnrollmentCode.objects.all()
+    serializer_class = base_srlzs.EnrollmentCodeSerializer
+    permission_classes = [permissions.IsAuthenticated, IsTeacher]
+    lookup_field = "classroom__id"
+
+    def get_queryset(self):
+        return super().get_queryset().filter(classroom__teacher=self.request.user)
+
+    def get_object(self):
+        classroom_id = self.kwargs.get(self.lookup_field)
+        return shortcuts.get_object_or_404(
+            self.get_queryset(), classroom__id=classroom_id
+        )
+
+    def get_serializer_class(self):
+        if self.request.method == "PUT":
+            return base_srlzs.EnrollmentCodePutSerializer
+        return base_srlzs.EnrollmentCodeSerializer
+
+
+@extend_schema(tags=["Enrollment"])
+class EnrollView(generics.CreateAPIView):
+    queryset = EnrollmentCode.objects.all()
+    serializer_class = base_srlzs.EnrollSerializer
+    permission_classes = [permissions.IsAuthenticated, IsStudent]
+
+    def create(self, request, *args, **kwargs):
+        code = request.data.get("code")
+        try:
+            enrollment_code = EnrollmentCode.objects.get(code=code, is_active=True)
+        except EnrollmentCode.DoesNotExist:
+            return Response(
+                {"detail": "Invalid or inactive enrollment code."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if enrollment_code.classroom.students.filter(id=request.user.id).exists():
+            return Response(
+                {"detail": "You are already enrolled in this classroom."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        enrollment_code.classroom.students.add(request.user)
+        return Response(
+            {"detail": "Successfully enrolled in the classroom."},
             status=status.HTTP_201_CREATED,
         )

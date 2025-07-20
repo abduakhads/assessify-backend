@@ -11,6 +11,7 @@ from .models import (
     StudentQuizAttempt,
     StudentQuestionAttempt,
     StudentAnswer,
+    EnrollmentCode,
 )
 
 
@@ -138,3 +139,12 @@ class StudentAnswerAdmin(admin.ModelAdmin):
     list_filter = ("is_correct",)
     search_fields = ("text", "question_attempt__question__text")
     readonly_fields = ("is_correct",)
+
+
+@admin.register(EnrollmentCode)
+class EnrollmentCodeAdmin(admin.ModelAdmin):
+    list_display = ("id", "code", "classroom", "is_active")
+    list_display_links = ("code",)
+    list_filter = ("classroom", "is_active")
+    search_fields = ("code", "classroom__name")
+    readonly_fields = ("code",)

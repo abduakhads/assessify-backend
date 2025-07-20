@@ -6,6 +6,8 @@ from django.utils import timezone
 from django.core.exceptions import ValidationError
 from decimal import Decimal, ROUND_HALF_UP
 
+import random, string
+
 
 class User(AbstractUser):
     class Role(models.TextChoices):
@@ -230,3 +232,28 @@ class StudentAnswer(models.Model):
 
     def __str__(self):
         return f"{self.question_attempt.quiz_attempt.student} - {self.question_attempt.question.text[:50]}: {self.text} ({'Correct' if self.is_correct else 'Incorrect'})"
+
+
+class EnrollmentCode(models.Model):
+    code = models.CharField(max_length=10, unique=True)
+    classroom = models.ForeignKey(
+        Classroom, on_delete=models.CASCADE, related_name="enrollment_codes"
+    )
+    is_active = models.BooleanField(default=True)
+
+    @staticmethod
+    def generate_code(length=8):
+        return "".join(random.choices(string.ascii_uppercase + string.digits, k=length))
+
+    @classmethod
+    def generate_for_class(cls, class_instance):
+        code = cls.generate_code()
+        while cls.objects.filter(code=code).exists():
+            code = cls.generate_code()
+        enrollment_code, created = cls.objects.update_or_create(
+            classroom=class_instance, defaults={"code": code}
+        )
+        return enrollment_code
+
+    def __str__(self):
+        return f"{self.code} - {self.classroom.name}"

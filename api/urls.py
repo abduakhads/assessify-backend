@@ -9,9 +9,12 @@ from api.views import (
     AnswerViewSet,
     StudentQuizAttemptViewSet,
     StudentAnswerSubmitViewSet,
+    EnrollmentCodeViewSet,
+    EnrollView,
 )
 
 router = routers.DefaultRouter()
+router.register(r"enrollment", EnrollmentCodeViewSet)
 router.register(r"classrooms", ClassroomViewSet)
 router.register(r"quizzes", QuizViewSet)
 router.register(r"questions", QuestionViewSet)
@@ -22,4 +25,5 @@ router.register(r"attempts", StudentQuizAttemptViewSet)
 urlpatterns = [
     path("", include(router.urls)),
     path("answer-submit/", StudentAnswerSubmitViewSet.as_view(), name="answer-submit"),
+    path("enroll/", EnrollView.as_view(), name="enroll"),
 ]

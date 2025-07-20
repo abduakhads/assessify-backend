@@ -11,6 +11,7 @@ from base.models import (
     StudentQuizAttempt,
     StudentQuestionAttempt,
     StudentAnswer,
+    EnrollmentCode,
 )
 
 
@@ -25,7 +26,7 @@ class CustomUserCreateSerializer(UserCreateSerializer):
 class BaseUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["id", "username", "email", "first_name", "last_name", "role"]
+        fields = ["id", "username", "first_name", "last_name"]
 
 
 class ClassroomSerializer(serializers.ModelSerializer):
@@ -47,6 +48,15 @@ class ClassroomSerializer(serializers.ModelSerializer):
                 if student["id"] == user.id
             ]
         return representation
+
+
+class ClassroomDeleteStudentsSerializer(serializers.Serializer):
+    student_ids = serializers.ListField(
+        child=serializers.IntegerField(), required=True, allow_empty=False
+    )
+
+    class Meta:
+        fields = ["student_ids"]
 
 
 class AnswerSerializer(serializers.ModelSerializer):
@@ -272,3 +282,33 @@ class SQANextQuestionSerializer(serializers.ModelSerializer):
     #         StudentQuestionAttempt.objects.get_or_create(quiz_attempt=obj, question=question)
     #         return QuestionSerializer(question, context=self.context).data
     #     return None
+
+
+class EnrollmentCodeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EnrollmentCode
+        fields = ["code", "classroom", "is_active"]
+        extra_kwargs = {
+            "code": {"read_only": True},
+            "classroom": {"read_only": True},
+        }
+
+
+class EnrollmentCodePutSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EnrollmentCode
+        fields = ["code", "classroom", "is_active"]
+        extra_kwargs = {
+            "code": {"read_only": True},
+            "classroom": {"read_only": True},
+            "is_active": {"read_only": True},
+        }
+
+    def save(self, **kwargs):
+        self.instance = EnrollmentCode.generate_for_class(self.instance.classroom)
+        self.instance.is_active = True
+        return super().save(**kwargs)
+
+
+class EnrollSerializer(serializers.Serializer):
+    code = serializers.CharField(required=True)
