@@ -312,3 +312,28 @@ class EnrollmentCodePutSerializer(serializers.ModelSerializer):
 
 class EnrollSerializer(serializers.Serializer):
     code = serializers.CharField(required=True)
+
+
+class TeacherStudentQuizAttemptStatsSerializer(serializers.ModelSerializer):
+    student = BaseUserSerializer(read_only=True)
+
+    class Meta:
+        model = StudentQuizAttempt
+        fields = ["id", "student", "started_at", "completed_at", "score"]
+        read_only_fields = ["id", "student", "started_at", "completed_at", "score"]
+
+
+class TeacherStudentQuestionAttemptStatsSerializer(serializers.ModelSerializer):
+    question = QuestionSerializer(read_only=True)
+    student_answers = StudentAnswerSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = StudentQuestionAttempt
+        fields = [
+            "id",
+            "question",
+            "started_at",
+            "submitted_at",
+            "student_answers",
+        ]
+        read_only_fields = ["id", "started_at", "submitted_at"]

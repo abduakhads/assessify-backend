@@ -176,6 +176,7 @@ SPECTACULAR_SETTINGS = {
     "TAGS": [
         {"name": "token"},
         {"name": "Enrollment"},
+        {"name": "Teacher Student Quiz Attempt Stats"},
         {"name": "Classroom"},
         {"name": "Quiz"},
         {"name": "Question"},

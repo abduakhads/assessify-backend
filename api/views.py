@@ -386,3 +386,42 @@ class EnrollView(generics.CreateAPIView):
             {"detail": "Successfully enrolled in the classroom."},
             status=status.HTTP_201_CREATED,
         )
+
+
+@extend_schema(tags=["Teacher Student Quiz Attempt Stats"])
+class TeacherStudentQuizAttemptsStatsViewSet(
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet,
+):
+    queryset = StudentQuizAttempt.objects.all()
+    serializer_class = base_srlzs.TeacherStudentQuizAttemptStatsSerializer
+    permission_classes = [permissions.IsAuthenticated, IsTeacher]
+
+    def get_queryset(self):
+        quiz_id = self.kwargs.get("id")
+        return (
+            super()
+            .get_queryset()
+            .filter(quiz__id=quiz_id, quiz__classroom__teacher=self.request.user)
+        )
+
+    @action(detail=False, methods=["get"], url_path=r"(?P<quiz_attempt_id>[^/.]+)")
+    def stats_by_quiz_attempt(self, request, id=None, quiz_attempt_id=None):
+        """Get question attempt stats for a specific quiz attempt"""
+        # First verify the quiz attempt belongs to the teacher's quiz
+        try:
+            quiz_attempt = self.get_queryset().get(id=quiz_attempt_id)
+        except StudentQuizAttempt.DoesNotExist:
+            return Response(
+                {"detail": "Quiz attempt not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        # Get all question attempts for this quiz attempt
+        question_attempts = StudentQuestionAttempt.objects.filter(
+            quiz_attempt=quiz_attempt
+        )
+        serializer = base_srlzs.TeacherStudentQuestionAttemptStatsSerializer(
+            question_attempts, many=True, context={"request": request}
+        )
+        return Response(serializer.data)

@@ -2,28 +2,35 @@ from django.urls import path, include
 from . import views
 from rest_framework import routers
 
-from api.views import (
-    ClassroomViewSet,
-    QuizViewSet,
-    QuestionViewSet,
-    AnswerViewSet,
-    StudentQuizAttemptViewSet,
-    StudentAnswerSubmitViewSet,
-    EnrollmentCodeViewSet,
-    EnrollView,
-)
+from api import views as api_views
 
 router = routers.DefaultRouter()
-router.register(r"enrollment", EnrollmentCodeViewSet)
-router.register(r"classrooms", ClassroomViewSet)
-router.register(r"quizzes", QuizViewSet)
-router.register(r"questions", QuestionViewSet)
-router.register(r"answers", AnswerViewSet)
-router.register(r"attempts", StudentQuizAttemptViewSet)
+router.register(r"enrollment", api_views.EnrollmentCodeViewSet)
+router.register(r"classrooms", api_views.ClassroomViewSet)
+router.register(r"quizzes", api_views.QuizViewSet)
+router.register(r"questions", api_views.QuestionViewSet)
+router.register(r"answers", api_views.AnswerViewSet)
+router.register(r"attempts", api_views.StudentQuizAttemptViewSet)
 
 
 urlpatterns = [
     path("", include(router.urls)),
-    path("answer-submit/", StudentAnswerSubmitViewSet.as_view(), name="answer-submit"),
-    path("enroll/", EnrollView.as_view(), name="enroll"),
+    path(
+        "answer-submit/",
+        api_views.StudentAnswerSubmitViewSet.as_view(),
+        name="answer-submit",
+    ),
+    path("enroll/", api_views.EnrollView.as_view(), name="enroll"),
+    path(
+        "quiz/<int:id>/stats/",
+        api_views.TeacherStudentQuizAttemptsStatsViewSet.as_view({"get": "list"}),
+        name="quiz-stats-list",
+    ),
+    path(
+        "quiz/<int:id>/stats/<int:quiz_attempt_id>/",
+        api_views.TeacherStudentQuizAttemptsStatsViewSet.as_view(
+            {"get": "stats_by_quiz_attempt"}
+        ),
+        name="quiz-stats-detail",
+    ),
 ]

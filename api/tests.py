@@ -917,6 +917,256 @@ class EnrollViewTests(BaseAPITestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
+class TeacherStudentQuizAttemptsStatsViewSetTests(BaseAPITestCase):
+    """Tests for TeacherStudentQuizAttemptsStatsViewSet."""
+
+    def setUp(self):
+        super().setUp()
+        # Add student2 to classroom for testing multiple students
+        self.classroom.students.add(self.student2)
+
+        # Create quiz attempts for testing
+        self.attempt1 = StudentQuizAttempt.objects.create(
+            student=self.student,
+            quiz=self.quiz,
+            completed_at=timezone.now(),
+            score=Decimal("85.50"),
+        )
+
+        self.attempt2 = StudentQuizAttempt.objects.create(
+            student=self.student2,
+            quiz=self.quiz,
+            completed_at=timezone.now(),
+            score=Decimal("92.00"),
+        )
+
+        # Create question attempts for testing detailed stats
+        self.question_attempt1 = StudentQuestionAttempt.objects.create(
+            quiz_attempt=self.attempt1,
+            question=self.question1,
+            submitted_at=timezone.now(),
+        )
+
+        self.question_attempt2 = StudentQuestionAttempt.objects.create(
+            quiz_attempt=self.attempt1,
+            question=self.question2,
+            submitted_at=timezone.now(),
+        )
+
+        # Create student answers for testing
+        self.student_answer1 = StudentAnswer.objects.create(
+            question_attempt=self.question_attempt1, text="4", is_correct=True
+        )
+
+        self.student_answer2 = StudentAnswer.objects.create(
+            question_attempt=self.question_attempt2, text="2", is_correct=True
+        )
+
+    def test_teacher_can_list_quiz_attempts_stats(self):
+        """Test that teachers can list quiz attempt stats for their quiz."""
+        self.client.force_authenticate(user=self.teacher)
+
+        response = self.client.get(f"/api/quiz/{self.quiz.id}/stats/")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)  # Two attempts
+
+        # Check data structure
+        attempt_data = response.data[0]
+        self.assertIn("id", attempt_data)
+        self.assertIn("student", attempt_data)
+        self.assertIn("started_at", attempt_data)
+        self.assertIn("completed_at", attempt_data)
+        self.assertIn("score", attempt_data)
+
+        # Check student data structure
+        self.assertIn("id", attempt_data["student"])
+        self.assertIn("username", attempt_data["student"])
+
+    def test_teacher_cannot_access_other_teachers_quiz_stats(self):
+        """Test that teachers cannot access stats for other teachers' quizzes."""
+        other_classroom = Classroom.objects.create(
+            name="Other Classroom", teacher=self.teacher2
+        )
+        other_quiz = Quiz.objects.create(
+            title="Other Quiz", classroom=other_classroom, is_active=True
+        )
+
+        self.client.force_authenticate(user=self.teacher)
+
+        response = self.client.get(f"/api/quiz/{other_quiz.id}/stats/")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 0)  # No attempts visible
+
+    def test_student_cannot_access_quiz_stats(self):
+        """Test that students cannot access quiz stats."""
+        self.client.force_authenticate(user=self.student)
+
+        response = self.client.get(f"/api/quiz/{self.quiz.id}/stats/")
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_teacher_can_get_specific_quiz_attempt_stats(self):
+        """Test that teachers can get detailed stats for a specific quiz attempt."""
+        self.client.force_authenticate(user=self.teacher)
+
+        response = self.client.get(
+            f"/api/quiz/{self.quiz.id}/stats/{self.attempt1.id}/"
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)  # Two question attempts
+
+        # Check data structure
+        question_attempt_data = response.data[0]
+        self.assertIn("id", question_attempt_data)
+        self.assertIn("question", question_attempt_data)
+        self.assertIn("started_at", question_attempt_data)
+        self.assertIn("submitted_at", question_attempt_data)
+        self.assertIn("student_answers", question_attempt_data)
+
+        # Check question data structure
+        self.assertIn("id", question_attempt_data["question"])
+        self.assertIn("text", question_attempt_data["question"])
+        self.assertIn("quiz", question_attempt_data["question"])
+
+        # Check student answers data structure
+        self.assertGreater(len(question_attempt_data["student_answers"]), 0)
+        answer_data = question_attempt_data["student_answers"][0]
+        self.assertIn("text", answer_data)
+        self.assertIn("is_correct", answer_data)
+
+    def test_teacher_cannot_access_nonexistent_quiz_attempt_stats(self):
+        """Test accessing stats for nonexistent quiz attempt."""
+        self.client.force_authenticate(user=self.teacher)
+
+        response = self.client.get(f"/api/quiz/{self.quiz.id}/stats/999/")
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertIn("Quiz attempt not found", response.data["detail"])
+
+    def test_teacher_cannot_access_other_teachers_quiz_attempt_stats(self):
+        """Test that teachers cannot access specific attempt stats from other teachers' quizzes."""
+        other_classroom = Classroom.objects.create(
+            name="Other Classroom", teacher=self.teacher2
+        )
+        other_quiz = Quiz.objects.create(
+            title="Other Quiz", classroom=other_classroom, is_active=True
+        )
+        other_attempt = StudentQuizAttempt.objects.create(
+            student=self.student, quiz=other_quiz, completed_at=timezone.now()
+        )
+
+        self.client.force_authenticate(user=self.teacher)
+
+        response = self.client.get(
+            f"/api/quiz/{self.quiz.id}/stats/{other_attempt.id}/"
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertIn("Quiz attempt not found", response.data["detail"])
+
+    def test_student_cannot_access_specific_quiz_attempt_stats(self):
+        """Test that students cannot access specific quiz attempt stats."""
+        self.client.force_authenticate(user=self.student)
+
+        response = self.client.get(
+            f"/api/quiz/{self.quiz.id}/stats/{self.attempt1.id}/"
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_empty_quiz_stats_for_quiz_without_attempts(self):
+        """Test stats for quiz without any attempts."""
+        empty_quiz = Quiz.objects.create(
+            title="Empty Quiz", classroom=self.classroom, is_active=True
+        )
+
+        self.client.force_authenticate(user=self.teacher)
+
+        response = self.client.get(f"/api/quiz/{empty_quiz.id}/stats/")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 0)
+
+    def test_quiz_attempt_stats_with_incomplete_attempt(self):
+        """Test stats including incomplete attempts."""
+        incomplete_attempt = StudentQuizAttempt.objects.create(
+            student=self.student,
+            quiz=self.quiz,
+            # No completed_at or score - incomplete
+        )
+
+        self.client.force_authenticate(user=self.teacher)
+
+        response = self.client.get(f"/api/quiz/{self.quiz.id}/stats/")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 3)  # Including incomplete attempt
+
+        # Find the incomplete attempt in response
+        incomplete_data = None
+        for attempt_data in response.data:
+            if attempt_data["id"] == incomplete_attempt.id:
+                incomplete_data = attempt_data
+                break
+
+        self.assertIsNotNone(incomplete_data)
+        self.assertIsNone(incomplete_data["completed_at"])
+        self.assertIsNone(incomplete_data["score"])
+
+    def test_question_attempt_stats_without_answers(self):
+        """Test question attempt stats for questions without student answers."""
+        # Create a new question for this test to avoid unique constraint issues
+        test_question = Question.objects.create(
+            quiz=self.quiz,
+            text="Test question without answers?",
+            has_multiple_answers=False,
+            order=3,
+        )
+
+        # Create attempt without answers
+        empty_question_attempt = StudentQuestionAttempt.objects.create(
+            quiz_attempt=self.attempt1,
+            question=test_question,
+            # No submitted_at - not submitted yet
+        )
+
+        self.client.force_authenticate(user=self.teacher)
+
+        response = self.client.get(
+            f"/api/quiz/{self.quiz.id}/stats/{self.attempt1.id}/"
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Find the question attempt without answers
+        empty_attempt_data = None
+        for qa_data in response.data:
+            if qa_data["id"] == empty_question_attempt.id:
+                empty_attempt_data = qa_data
+                break
+
+        self.assertIsNotNone(empty_attempt_data)
+        self.assertEqual(len(empty_attempt_data["student_answers"]), 0)
+
+    def test_unauthenticated_user_cannot_access_quiz_stats(self):
+        """Test that unauthenticated users cannot access quiz stats."""
+        response = self.client.get(f"/api/quiz/{self.quiz.id}/stats/")
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_nonexistent_quiz_stats(self):
+        """Test accessing stats for nonexistent quiz."""
+        self.client.force_authenticate(user=self.teacher)
+
+        response = self.client.get("/api/quiz/999/stats/")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 0)  # No attempts for nonexistent quiz
+
+
 class IntegrationTests(BaseAPITestCase):
     """Integration tests for complete user workflows."""
 
