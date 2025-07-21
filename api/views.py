@@ -48,8 +48,6 @@ class ClassroomViewSet(viewsets.ModelViewSet):
             return qs.filter(teacher=self.request.user)
         elif self.request.user.role == User.Role.STUDENT:
             return qs.filter(students=self.request.user)
-        else:
-            return qs.none()
 
     @action(detail=True, methods=["post"], url_path="delete-students")
     def delete_students(self, request, pk=None):
@@ -136,12 +134,7 @@ class QuestionViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         qs = super().get_queryset()
-        if self.request.user.role == User.Role.TEACHER:
-            classrooms = Classroom.objects.filter(teacher=self.request.user)
-        elif self.request.user.role == User.Role.STUDENT:
-            classrooms = Classroom.objects.filter(students=self.request.user)
-        quizzes = Quiz.objects.filter(classroom__in=classrooms)
-        return qs.filter(quiz__in=quizzes)
+        return qs.filter(quiz__classroom__teacher=self.request.user)
 
     def create(self, request, *args, **kwargs):
         quiz_id = request.data.get("quiz")
@@ -181,12 +174,7 @@ class AnswerViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         qs = super().get_queryset()
-        if self.request.user.role == User.Role.TEACHER:
-            classrooms = Classroom.objects.filter(teacher=self.request.user)
-        elif self.request.user.role == User.Role.STUDENT:
-            classrooms = Classroom.objects.filter(students=self.request.user)
-        quizzes = Quiz.objects.filter(classroom__in=classrooms)
-        return qs.filter(question__quiz__in=quizzes)
+        return qs.filter(question__quiz__classroom__teacher=self.request.user)
 
     def create(self, request, *args, **kwargs):
         question_id = request.data.get("question")
