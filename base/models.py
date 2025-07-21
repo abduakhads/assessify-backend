@@ -225,8 +225,6 @@ class StudentAnswer(models.Model):
         ]
 
     def clean(self):
-        if self.question_attempt.question is None:
-            raise ValidationError("Question not found in the attempt.")
         if self.question_attempt.submitted_at is None:
             raise ValidationError(
                 "Cannot add an answer before the question attempt is submitted."
