@@ -320,7 +320,7 @@ class TeacherStudentQuizAttemptStatsSerializer(serializers.ModelSerializer):
     class Meta:
         model = StudentQuizAttempt
         fields = ["id", "student", "started_at", "completed_at", "score"]
-        read_only_fields = ["id", "student", "started_at", "completed_at", "score"]
+        read_only_fields = ["id", "student", "started_at", "completed_at"]
 
 
 class TeacherStudentQuestionAttemptStatsSerializer(serializers.ModelSerializer):

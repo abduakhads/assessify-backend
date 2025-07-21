@@ -523,73 +523,73 @@ class StudentQuizAttemptModelTest(TestCase):
         next_question = attempt.get_next_question()
         self.assertIsNone(next_question)
 
-    def test_calculate_score_empty_attempt(self):
-        """Test calculating score for attempt with no answers"""
-        attempt = StudentQuizAttempt.objects.create(
-            student=self.student, quiz=self.quiz
-        )
+    # def test_calculate_score_empty_attempt(self):
+    #     """Test calculating score for attempt with no answers"""
+    #     attempt = StudentQuizAttempt.objects.create(
+    #         student=self.student, quiz=self.quiz
+    #     )
 
-        attempt.calculate_score()
+    #     attempt.calculate_score()
 
-        self.assertEqual(attempt.score, Decimal("0.00"))
-        self.assertIsNotNone(attempt.completed_at)
+    #     self.assertEqual(attempt.score, Decimal("0.00"))
+    #     self.assertIsNotNone(attempt.completed_at)
 
-    def test_calculate_score_all_correct(self):
-        """Test calculating score with all correct answers"""
-        attempt = StudentQuizAttempt.objects.create(
-            student=self.student, quiz=self.quiz
-        )
+    # def test_calculate_score_all_correct(self):
+    #     """Test calculating score with all correct answers"""
+    #     attempt = StudentQuizAttempt.objects.create(
+    #         student=self.student, quiz=self.quiz
+    #     )
 
-        # Add correct answers for both questions
-        for question in [self.question1, self.question2]:
-            Answer.objects.create(question=question, text="Correct", is_correct=True)
-            question_attempt = StudentQuestionAttempt.objects.create(
-                quiz_attempt=attempt, question=question
-            )
-            question_attempt.submitted_at = timezone.now()
-            question_attempt.save()
-            StudentAnswer.objects.create(
-                question_attempt=question_attempt, text="Correct", is_correct=True
-            )
+    #     # Add correct answers for both questions
+    #     for question in [self.question1, self.question2]:
+    #         Answer.objects.create(question=question, text="Correct", is_correct=True)
+    #         question_attempt = StudentQuestionAttempt.objects.create(
+    #             quiz_attempt=attempt, question=question
+    #         )
+    #         question_attempt.submitted_at = timezone.now()
+    #         question_attempt.save()
+    #         StudentAnswer.objects.create(
+    #             question_attempt=question_attempt, text="Correct", is_correct=True
+    #         )
 
-        attempt.calculate_score()
+    #     attempt.calculate_score()
 
-        self.assertEqual(attempt.score, Decimal("100.00"))
-        self.assertIsNotNone(attempt.completed_at)
+    #     self.assertEqual(attempt.score, Decimal("100.00"))
+    #     self.assertIsNotNone(attempt.completed_at)
 
-    def test_calculate_score_mixed_answers(self):
-        """Test calculating score with mixed correct/incorrect answers"""
-        attempt = StudentQuizAttempt.objects.create(
-            student=self.student, quiz=self.quiz
-        )
+    # def test_calculate_score_mixed_answers(self):
+    #     """Test calculating score with mixed correct/incorrect answers"""
+    #     attempt = StudentQuizAttempt.objects.create(
+    #         student=self.student, quiz=self.quiz
+    #     )
 
-        # Add answers - one correct, one incorrect
-        Answer.objects.create(question=self.question1, text="Correct", is_correct=True)
-        Answer.objects.create(question=self.question2, text="Correct", is_correct=True)
+    #     # Add answers - one correct, one incorrect
+    #     Answer.objects.create(question=self.question1, text="Correct", is_correct=True)
+    #     Answer.objects.create(question=self.question2, text="Correct", is_correct=True)
 
-        # First question - correct answer
-        q1_attempt = StudentQuestionAttempt.objects.create(
-            quiz_attempt=attempt, question=self.question1
-        )
-        q1_attempt.submitted_at = timezone.now()
-        q1_attempt.save()
-        StudentAnswer.objects.create(
-            question_attempt=q1_attempt, text="Correct", is_correct=True
-        )
+    #     # First question - correct answer
+    #     q1_attempt = StudentQuestionAttempt.objects.create(
+    #         quiz_attempt=attempt, question=self.question1
+    #     )
+    #     q1_attempt.submitted_at = timezone.now()
+    #     q1_attempt.save()
+    #     StudentAnswer.objects.create(
+    #         question_attempt=q1_attempt, text="Correct", is_correct=True
+    #     )
 
-        # Second question - incorrect answer
-        q2_attempt = StudentQuestionAttempt.objects.create(
-            quiz_attempt=attempt, question=self.question2
-        )
-        q2_attempt.submitted_at = timezone.now()
-        q2_attempt.save()
-        StudentAnswer.objects.create(
-            question_attempt=q2_attempt, text="Wrong", is_correct=False
-        )
+    #     # Second question - incorrect answer
+    #     q2_attempt = StudentQuestionAttempt.objects.create(
+    #         quiz_attempt=attempt, question=self.question2
+    #     )
+    #     q2_attempt.submitted_at = timezone.now()
+    #     q2_attempt.save()
+    #     StudentAnswer.objects.create(
+    #         question_attempt=q2_attempt, text="Wrong", is_correct=False
+    #     )
 
-        attempt.calculate_score()
+    #     attempt.calculate_score()
 
-        self.assertEqual(attempt.score, Decimal("50.00"))
+    #     self.assertEqual(attempt.score, Decimal("50.00"))
 
     def test_invalid_student_role_validation(self):
         """Test validation when non-student attempts quiz"""

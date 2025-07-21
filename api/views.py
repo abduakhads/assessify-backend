@@ -265,7 +265,7 @@ class StudentQuizAttemptViewSet(
         has_next = serializer.data.get("next_question") is not None
         if not has_next and attempt.completed_at is None:
             attempt.completed_at = timezone.now()
-            attempt.calculate_score()
+            # attempt.calculate_score()
             attempt.save()
         return Response(serializer.data)
 
@@ -405,10 +405,14 @@ class TeacherStudentQuizAttemptsStatsViewSet(
             .filter(quiz__id=quiz_id, quiz__classroom__teacher=self.request.user)
         )
 
+    def get_serializer_class(self):
+        if self.action == "stats_by_quiz_attempt":
+            return base_srlzs.TeacherStudentQuestionAttemptStatsSerializer
+        return super().get_serializer_class()
+
     @action(detail=False, methods=["get"], url_path=r"(?P<quiz_attempt_id>[^/.]+)")
     def stats_by_quiz_attempt(self, request, id=None, quiz_attempt_id=None):
         """Get question attempt stats for a specific quiz attempt"""
-        # First verify the quiz attempt belongs to the teacher's quiz
         try:
             quiz_attempt = self.get_queryset().get(id=quiz_attempt_id)
         except StudentQuizAttempt.DoesNotExist:
@@ -417,11 +421,47 @@ class TeacherStudentQuizAttemptsStatsViewSet(
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        # Get all question attempts for this quiz attempt
-        question_attempts = StudentQuestionAttempt.objects.filter(
-            quiz_attempt=quiz_attempt
+        question_attempts = (
+            StudentQuestionAttempt.objects.filter(quiz_attempt=quiz_attempt)
+            .select_related("question__quiz")
+            .prefetch_related(
+                "question__answers",
+                "student_answers",
+            )
         )
-        serializer = base_srlzs.TeacherStudentQuestionAttemptStatsSerializer(
+        serializer = self.get_serializer(
             question_attempts, many=True, context={"request": request}
         )
         return Response(serializer.data)
+
+    @action(detail=False, methods=["patch"], url_path=r"(?P<quiz_attempt_id>[^/.]+)")
+    def set_score(self, request, id=None, quiz_attempt_id=None):
+        """Set the score for a specific quiz attempt"""
+        try:
+            quiz_attempt = self.get_queryset().get(id=quiz_attempt_id)
+        except StudentQuizAttempt.DoesNotExist:
+            return Response(
+                {"detail": "Quiz attempt not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        try:
+            score = request.data.get("score")
+            score = float(score)
+        except (TypeError, ValueError):
+            return Response(
+                {"detail": "Invalid score provided."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if score < 0 or score > 100:
+            return Response(
+                {"detail": "Invalid score provided."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        quiz_attempt.score = score
+        quiz_attempt.save()
+        return Response(
+            {"detail": "Score updated successfully."},
+            status=status.HTTP_200_OK,
+        )

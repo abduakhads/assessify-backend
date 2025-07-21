@@ -1166,6 +1166,162 @@ class TeacherStudentQuizAttemptsStatsViewSetTests(BaseAPITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 0)  # No attempts for nonexistent quiz
 
+    def test_teacher_can_set_quiz_attempt_score(self):
+        """Test that teachers can set the score for a quiz attempt."""
+        self.client.force_authenticate(user=self.teacher)
+
+        response = self.client.patch(
+            f"/api/quiz/{self.quiz.id}/stats/{self.attempt1.id}/",
+            {"score": 75.5},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("Score updated successfully", response.data["detail"])
+
+        # Verify score was updated in database
+        self.attempt1.refresh_from_db()
+        self.assertEqual(self.attempt1.score, Decimal("75.5"))
+
+    def test_teacher_cannot_set_invalid_score(self):
+        """Test that teachers cannot set invalid scores."""
+        self.client.force_authenticate(user=self.teacher)
+
+        # Test negative score
+        response = self.client.patch(
+            f"/api/quiz/{self.quiz.id}/stats/{self.attempt1.id}/",
+            {"score": -10},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("Invalid score provided", response.data["detail"])
+
+        # Test score over 100
+        response = self.client.patch(
+            f"/api/quiz/{self.quiz.id}/stats/{self.attempt1.id}/",
+            {"score": 110},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("Invalid score provided", response.data["detail"])
+
+        # Test non-numeric score
+        response = self.client.patch(
+            f"/api/quiz/{self.quiz.id}/stats/{self.attempt1.id}/",
+            {"score": "invalid"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("Invalid score provided", response.data["detail"])
+
+        # Test missing score
+        response = self.client.patch(
+            f"/api/quiz/{self.quiz.id}/stats/{self.attempt1.id}/",
+            {},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("Invalid score provided", response.data["detail"])
+
+    def test_teacher_cannot_set_score_for_nonexistent_attempt(self):
+        """Test setting score for nonexistent quiz attempt."""
+        self.client.force_authenticate(user=self.teacher)
+
+        response = self.client.patch(
+            f"/api/quiz/{self.quiz.id}/stats/999/",
+            {"score": 80},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertIn("Quiz attempt not found", response.data["detail"])
+
+    def test_teacher_cannot_set_score_for_other_teachers_quiz_attempt(self):
+        """Test that teachers cannot set scores for other teachers' quiz attempts."""
+        other_classroom = Classroom.objects.create(
+            name="Other Classroom", teacher=self.teacher2
+        )
+        other_quiz = Quiz.objects.create(
+            title="Other Quiz", classroom=other_classroom, is_active=True
+        )
+        other_attempt = StudentQuizAttempt.objects.create(
+            student=self.student, quiz=other_quiz, completed_at=timezone.now()
+        )
+
+        self.client.force_authenticate(user=self.teacher)
+
+        response = self.client.patch(
+            f"/api/quiz/{self.quiz.id}/stats/{other_attempt.id}/",
+            {"score": 80},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertIn("Quiz attempt not found", response.data["detail"])
+
+    def test_student_cannot_set_quiz_attempt_score(self):
+        """Test that students cannot set quiz attempt scores."""
+        self.client.force_authenticate(user=self.student)
+
+        response = self.client.patch(
+            f"/api/quiz/{self.quiz.id}/stats/{self.attempt1.id}/",
+            {"score": 80},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_set_score_with_edge_cases(self):
+        """Test setting scores with edge case values."""
+        self.client.force_authenticate(user=self.teacher)
+
+        # Test score 0
+        response = self.client.patch(
+            f"/api/quiz/{self.quiz.id}/stats/{self.attempt1.id}/",
+            {"score": 0},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.attempt1.refresh_from_db()
+        self.assertEqual(self.attempt1.score, Decimal("0"))
+
+        # Test score 100
+        response = self.client.patch(
+            f"/api/quiz/{self.quiz.id}/stats/{self.attempt1.id}/",
+            {"score": 100},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.attempt1.refresh_from_db()
+        self.assertEqual(self.attempt1.score, Decimal("100"))
+
+        # Test decimal score
+        response = self.client.patch(
+            f"/api/quiz/{self.quiz.id}/stats/{self.attempt1.id}/",
+            {"score": 87.25},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.attempt1.refresh_from_db()
+        self.assertEqual(self.attempt1.score, Decimal("87.25"))
+
+    def test_unauthenticated_user_cannot_set_score(self):
+        """Test that unauthenticated users cannot set scores."""
+        response = self.client.patch(
+            f"/api/quiz/{self.quiz.id}/stats/{self.attempt1.id}/",
+            {"score": 80},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
 
 class IntegrationTests(BaseAPITestCase):
     """Integration tests for complete user workflows."""
@@ -1217,11 +1373,11 @@ class IntegrationTests(BaseAPITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIsNone(response.data["next_question"])
 
-        # Verify attempt is completed with score
+        # Verify attempt is completed but score is not automatically calculated
         attempt = StudentQuizAttempt.objects.get(id=attempt_id)
         self.assertIsNotNone(attempt.completed_at)
-        self.assertIsNotNone(attempt.score)
-        self.assertEqual(attempt.score, Decimal("100.00"))  # All answers correct
+        # Score is now manually set by teachers, not automatically calculated
+        self.assertIsNone(attempt.score)
 
     def test_complete_teacher_quiz_creation_workflow(self):
         """Test complete workflow for teacher creating and managing a quiz."""

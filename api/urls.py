@@ -15,12 +15,12 @@ router.register(r"attempts", api_views.StudentQuizAttemptViewSet)
 
 urlpatterns = [
     path("", include(router.urls)),
+    path("enroll/", api_views.EnrollView.as_view(), name="enroll"),
     path(
         "answer-submit/",
         api_views.StudentAnswerSubmitViewSet.as_view(),
         name="answer-submit",
     ),
-    path("enroll/", api_views.EnrollView.as_view(), name="enroll"),
     path(
         "quiz/<int:id>/stats/",
         api_views.TeacherStudentQuizAttemptsStatsViewSet.as_view({"get": "list"}),
@@ -29,7 +29,7 @@ urlpatterns = [
     path(
         "quiz/<int:id>/stats/<int:quiz_attempt_id>/",
         api_views.TeacherStudentQuizAttemptsStatsViewSet.as_view(
-            {"get": "stats_by_quiz_attempt"}
+            {"get": "stats_by_quiz_attempt", "patch": "set_score"}
         ),
         name="quiz-stats-detail",
     ),

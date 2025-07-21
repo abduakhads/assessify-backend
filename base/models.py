@@ -137,20 +137,22 @@ class StudentQuizAttempt(models.Model):
     def __str__(self):
         return f"attempt #{self.id}"
 
-    # TODO: IMPLEMET MULPITPLE GRADING SYSTEMS + DECREMENT FOR INCORRECT ANSWERS
-    def calculate_score(self):
-        answers = StudentAnswer.objects.filter(question_attempt__quiz_attempt=self)
-        total = answers.count()
-        correct = answers.filter(is_correct=True).count()
+    # TODO: IMPLEMET MULPITPLE GRADING SYSTEMS
+    # LET Teacher set score for now
 
-        if total:
-            percentage = Decimal(correct * 100) / Decimal(total)
-            self.score = percentage.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-        else:
-            self.score = Decimal("0.00")
+    # def calculate_score(self):
+    #     answers = StudentAnswer.objects.filter(question_attempt__quiz_attempt=self)
+    #     total = answers.count()
+    #     correct = answers.filter(is_correct=True).count()
 
-        self.completed_at = timezone.now()
-        self.save()
+    #     if total:
+    #         percentage = Decimal(correct * 100) / Decimal(total)
+    #         self.score = percentage.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    #     else:
+    #         self.score = Decimal("0.00")
+
+    #     self.completed_at = timezone.now()
+    #     self.save()
 
     def clean(self):
         super().clean()
