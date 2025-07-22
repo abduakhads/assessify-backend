@@ -2,31 +2,78 @@ name: django-tests
 
 on:
   push:
-    branches: [ main ]
+    branches: ["*"]
   pull_request:
-    branches: [ main ]
+    branches: ["*"]
 
 jobs:
   test:
     runs-on: ubuntu-latest
-    
+
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetch full history for change detection
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.12'
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
-    - name: Run migrations
-      run: |
-        python manage.py migrate
-        
-    - name: Run tests
-      run: |
-        python manage.py test
+      - name: Run migrations
+        run: |
+          python manage.py migrate
+
+      - name: Detect changes and run appropriate tests
+        run: |
+          # Check if this is main branch or PR to main
+          if [ "${{ github.ref }}" = "refs/heads/main" ] || [ "${{ github.base_ref }}" = "main" ]; then
+            echo "Running full test suite (main branch or PR to main)"
+            python manage.py test
+          else
+            echo "Detecting changes in app folders..."
+            
+            # Get changed files
+            if [ "${{ github.event_name }}" = "pull_request" ]; then
+              CHANGED_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }})
+            else
+              CHANGED_FILES=$(git diff --name-only HEAD~1..HEAD)
+            fi
+            
+            echo "Changed files:"
+            echo "$CHANGED_FILES"
+            
+            # Initialize test apps array
+            TEST_APPS=()
+            
+            # Check if base app has changes
+            if echo "$CHANGED_FILES" | grep -q "^base/"; then
+              echo "Changes detected in base app"
+              TEST_APPS+=("base")
+            fi
+            
+            # Check if api app has changes
+            if echo "$CHANGED_FILES" | grep -q "^api/"; then
+              echo "Changes detected in api app"
+              TEST_APPS+=("api")
+            fi
+            
+            # Check if config or root files changed (run all tests)
+            if echo "$CHANGED_FILES" | grep -qE "^(config/|manage\.py|requirements\.txt|\.github/)"; then
+              echo "Changes detected in config or core files, running full test suite"
+              python manage.py test
+            elif [ ${#TEST_APPS[@]} -eq 0 ]; then
+              echo "No changes detected in app folders, skipping tests"
+            else
+              echo "Running tests for changed apps: ${TEST_APPS[*]}"
+              for app in "${TEST_APPS[@]}"; do
+                echo "Running tests for $app..."
+                python manage.py test $app
+              done
+            fi
+          fi
