@@ -9,11 +9,6 @@ updates:
       time: "09:00"
       timezone: "UTC"
     open-pull-requests-limit: 10
-    reviewers:
-      - "abduakhads"
-    labels:
-      - "dependencies"
-      - "python"
     commit-message:
       prefix: "deps"
       include: "scope"
@@ -27,11 +22,6 @@ updates:
       time: "09:00"
       timezone: "UTC"
     open-pull-requests-limit: 5
-    reviewers:
-      - "abduakhads"
-    labels:
-      - "dependencies"
-      - "github-actions"
     commit-message:
       prefix: "ci"
       include: "scope"

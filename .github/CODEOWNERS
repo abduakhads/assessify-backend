@@ -1,0 +1,9 @@
+# Global code owners
+
+- @abduakhads
+
+# Dependency updates (Dependabot PRs)
+
+requirements.txt @abduakhads
+.github/workflows/ @abduakhads
+.github/dependabot.yml @abduakhads
