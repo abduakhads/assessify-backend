@@ -4,7 +4,7 @@ from django.utils import timezone
 from decimal import Decimal
 from datetime import timedelta
 from django.db import IntegrityError
-from .models import (
+from ..models import (
     User,
     Classroom,
     Quiz,
@@ -422,7 +422,7 @@ class AnswerModelTest(TestCase):
     def test_case_sensitive_uniqueness(self):
         """Test that uniqueness constraint is case sensitive"""
         Answer.objects.create(question=self.question, text="Answer")
-        # This should work as it's different case
+        # this should work as it's different case, (should it bro?) note: change in case model change
         answer2 = Answer.objects.create(question=self.question, text="answer")
         self.assertEqual(answer2.text, "answer")
 
@@ -523,6 +523,7 @@ class StudentQuizAttemptModelTest(TestCase):
         next_question = attempt.get_next_question()
         self.assertIsNone(next_question)
 
+    # NOTE: calculate_score method is commented out in the model
     # def test_calculate_score_empty_attempt(self):
     #     """Test calculating score for attempt with no answers"""
     #     attempt = StudentQuizAttempt.objects.create(
@@ -778,7 +779,7 @@ class StudentAnswerModelTest(TestCase):
 
         self.assertEqual(answer.question_attempt, self.question_attempt)
         self.assertEqual(answer.text, "4")
-        self.assertFalse(answer.is_correct)  # Default, will be calculated
+        self.assertFalse(answer.is_correct)  # will be calculated
 
     def test_student_answer_str_method(self):
         """Test student answer string representation"""
@@ -1082,21 +1083,18 @@ class EnrollmentCodeModelTest(TestCase):
 
     def test_generate_for_class_existing_code(self):
         """Test generate_for_class method updates existing code"""
-        # Create initial enrollment code
         initial_code = EnrollmentCode.objects.create(
             code="OLD12345", classroom=self.classroom, is_active=False
         )
 
-        # Generate new code for same classroom
         new_enrollment_code = EnrollmentCode.generate_for_class(self.classroom)
 
-        # Should be the same object (updated)
         self.assertEqual(new_enrollment_code.id, initial_code.id)
         self.assertNotEqual(new_enrollment_code.code, "OLD12345")
         self.assertEqual(len(new_enrollment_code.code), 8)
 
-        # Note: is_active is not updated by generate_for_class, only the code
-        # This is the actual behavior of the model method
+        # NOTE: is_active is not updated by generate_for_class, only the code,
+        # p.s it updates (is_active) at put request to renew the code (may be i should move it to model method TODO)
         self.assertFalse(new_enrollment_code.is_active)  # Remains as originally set
 
     def test_generate_for_class_collision_handling(self):
