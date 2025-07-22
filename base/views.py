@@ -2,7 +2,7 @@ import requests
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework import status
-
+from drf_spectacular.utils import extend_schema
 
 from rest_framework import serializers
 
@@ -14,6 +14,11 @@ class ActivateUserResponseSerializer(serializers.Serializer):
 
 
 # Create your views here.
+@extend_schema(
+    summary="Activate User Account",
+    responses={200: ActivateUserResponseSerializer},
+    tags=["Authentication"],
+)
 @api_view(["GET"])
 def activate_user(request, uidb64, token):
     base_url = request.build_absolute_uri("/").rstrip("/")
