@@ -1,5 +1,7 @@
 name: django-tests
-
+permissions:
+  contents: read
+  
 on:
   push:
     branches: ["*"]
