@@ -1,5 +1,5 @@
 """
-WSGI config for assessly project.
+WSGI config for assessify project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
 
