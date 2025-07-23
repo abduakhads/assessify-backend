@@ -1,0 +1,16 @@
+{% load i18n %}
+
+{% block subject %}
+Activate your {{ site_name }} account
+{% endblock subject %}
+
+{% block html_body %}
+<h2>Welcome to {{ site_name }}!</h2>
+<p>Hi {% if user.get_username %}{{ user.get_username }}{% elif user.username %}{{ user.username }}{% else %}there{% endif %},</p>
+
+<p>Thanks for registering. Please click the link below to activate your account:</p>
+
+<p><a href="{{ activation_url }}">{{ activation_url }}</a></p>
+
+<p>Thanks,<br>The {{ site_name }} Team</p>
+{% endblock html_body %}
