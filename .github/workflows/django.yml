@@ -1,7 +1,7 @@
 name: django-tests
 permissions:
   contents: read
-  
+
 on:
   push:
     branches: ["*"]
@@ -33,9 +33,9 @@ jobs:
 
       - name: Detect changes and run appropriate tests
         run: |
-          # Check if this is main branch or PR to main
-          if [ "${{ github.ref }}" = "refs/heads/main" ] || [ "${{ github.base_ref }}" = "main" ]; then
-            echo "Running full test suite (main branch or PR to main)"
+          # Check if this is a PR to main
+          if [ "${{ github.base_ref }}" = "main" ]; then
+            echo "Running full test suite (PR to main)"
             python manage.py test
           else
             echo "Detecting changes in app folders..."
