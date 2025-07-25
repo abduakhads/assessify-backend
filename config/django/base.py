@@ -201,6 +201,3 @@ SPECTACULAR_SETTINGS = {
 }
 
 AUTH_USER_MODEL = "base.User"
-
-# For error reporting, DJANGO_ADMINS=Blake:blake@cyb.org,Alice:alice@cyb.org
-ADMINS = [x.split(":") for x in env.list("DJANGO_ADMINS")]
