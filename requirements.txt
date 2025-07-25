@@ -7,3 +7,4 @@ django-cors-headers==4.7.0
 djoser==2.3.3
 django-filter==25.1
 django-silk==5.4.0
+gunicorn==23.0.0

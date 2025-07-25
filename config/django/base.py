@@ -83,12 +83,7 @@ WSGI_APPLICATION = "config.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
-}
+DATABASES = {"default": env.db(default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}")}
 
 
 # Password validation
@@ -126,6 +121,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = "static/"
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -169,6 +165,8 @@ if env.str("DJANGO_EMAIL_HOST", default=False):
     EMAIL_HOST_USER = env.str("DJANGO_EMAIL_HOST_USER")
     EMAIL_HOST_PASSWORD = env.str("DJANGO_EMAIL_HOST_PASSWORD")
     EMAIL_USE_TLS = env.bool("DJANGO_EMAIL_USE_TLS")
+    DEFAULT_FROM_EMAIL = "Assessify App <" + EMAIL_HOST_USER + ">"
+    SERVER_EMAIL = DEFAULT_FROM_EMAIL
 
 SIMPLE_JWT = {
     "AUTH_HEADER_TYPES": ("JWT",),
@@ -203,3 +201,6 @@ SPECTACULAR_SETTINGS = {
 }
 
 AUTH_USER_MODEL = "base.User"
+
+# For error reporting, DJANGO_ADMINS=Blake:blake@cyb.org,Alice:alice@cyb.org
+ADMINS = [x.split(":") for x in env.list("DJANGO_ADMINS")]
