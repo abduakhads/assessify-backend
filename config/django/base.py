@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
+    "corsheaders",
     "djoser",
     "drf_spectacular",
     "rest_framework_simplejwt.token_blacklist",
@@ -50,12 +51,13 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
-    "config.middleware.StaffOnlyAdminMiddleware",  # Custom middleware to restrict admin access
+    # "config.middleware.StaffOnlyAdminMiddleware",  # Custom middleware to restrict admin access
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -148,6 +150,7 @@ DJOSER = {
     "SERIALIZERS": {
         "user_create": "base.serializers.CustomUserCreateSerializer",
         "user": "base.serializers.BaseUserSerializer",
+        "current_user": "base.serializers.BaseUserSerializer",
     },
     "EMAIL": {
         "activation": "base.email.AwesomeActivationEmail",
@@ -201,3 +204,8 @@ SPECTACULAR_SETTINGS = {
 }
 
 AUTH_USER_MODEL = "base.User"
+
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
+
+ADMIN_URL = env.str("DJANGO_ADMIN_URL", "admin/")
