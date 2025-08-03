@@ -138,7 +138,7 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.SessionAuthentication",
     ],
     "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
-    "EXCEPTION_HANDLER": "config.custom_exceptions.custom_exception_handler",
+    # "EXCEPTION_HANDLER": "config.custom_exceptions.custom_exception_handler",
 }
 
 DJOSER = {
