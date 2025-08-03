@@ -22,6 +22,12 @@ class CustomUserCreateSerializer(UserCreateSerializer):
     class Meta(UserCreateSerializer.Meta):
         fields = ["id", "username", "email", "password", "role"]
 
+    def validate_email(self, value):
+        """Validate that email is unique."""
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("A user with this email already exists.")
+        return value
+
 
 class BaseUserSerializer(serializers.ModelSerializer):
     class Meta:

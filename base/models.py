@@ -15,6 +15,7 @@ class User(AbstractUser):
         TEACHER = "teacher", "Teacher"
 
     role = models.CharField(max_length=10, choices=Role.choices)
+    email = models.EmailField(unique=True)
 
 
 class Classroom(models.Model):
