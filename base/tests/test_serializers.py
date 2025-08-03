@@ -74,11 +74,33 @@ class CustomUserCreateSerializerTest(TestCase):
         self.assertFalse(serializer.is_valid())
         self.assertIn("role", serializer.errors)
 
+    def test_duplicate_email(self):
+        """Test serializer validation with duplicate email"""
+        # Create a user first
+        User.objects.create_user(
+            username="existinguser",
+            email="test@example.com",
+            password="pass123",
+            role=User.Role.TEACHER,
+        )
+
+        # Try to create another user with the same email
+        data = {
+            "username": "newuser",
+            "email": "test@example.com",
+            "password": "testpass123",
+            "role": User.Role.STUDENT,
+        }
+        serializer = CustomUserCreateSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("email", serializer.errors)
+
 
 class BaseUserSerializerTest(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(
             username="testuser",
+            email="test@example.com",
             first_name="Test",
             last_name="User",
             role=User.Role.TEACHER,
@@ -96,17 +118,34 @@ class BaseUserSerializerTest(TestCase):
         self.assertNotIn("password", data)
         self.assertNotIn("email", data)
 
+    def test_readonly_fields(self):
+        """Test that certain fields are read-only"""
+        serializer = BaseUserSerializer()
+        readonly_fields = serializer.Meta.extra_kwargs
+
+        self.assertTrue(readonly_fields["role"]["read_only"])
+        self.assertTrue(readonly_fields["username"]["read_only"])
+
 
 class ClassroomSerializerTest(TestCase):
     def setUp(self):
         self.teacher = User.objects.create_user(
-            username="teacher", password="pass", role=User.Role.TEACHER
+            username="teacher",
+            email="teacher@example.com",
+            password="pass",
+            role=User.Role.TEACHER,
         )
         self.student1 = User.objects.create_user(
-            username="student1", password="pass", role=User.Role.STUDENT
+            username="student1",
+            email="student1@example.com",
+            password="pass",
+            role=User.Role.STUDENT,
         )
         self.student2 = User.objects.create_user(
-            username="student2", password="pass", role=User.Role.STUDENT
+            username="student2",
+            email="student2@example.com",
+            password="pass",
+            role=User.Role.STUDENT,
         )
         self.classroom = Classroom.objects.create(name="Math", teacher=self.teacher)
         self.classroom.students.add(self.student1, self.student2)
@@ -163,10 +202,16 @@ class ClassroomDeleteStudentsSerializerTest(TestCase):
 class AnswerSerializerTest(TestCase):
     def setUp(self):
         self.teacher = User.objects.create_user(
-            username="teacher", password="pass", role=User.Role.TEACHER
+            username="teacher",
+            email="teacher@example.com",
+            password="pass",
+            role=User.Role.TEACHER,
         )
         self.student = User.objects.create_user(
-            username="student", password="pass", role=User.Role.STUDENT
+            username="student",
+            email="student@example.com",
+            password="pass",
+            role=User.Role.STUDENT,
         )
         self.classroom = Classroom.objects.create(name="Math", teacher=self.teacher)
         self.quiz = Quiz.objects.create(title="Quiz 1", classroom=self.classroom)
@@ -298,10 +343,16 @@ class AnswerSerializerTest(TestCase):
 class QuestionSerializerTest(TestCase):
     def setUp(self):
         self.teacher = User.objects.create_user(
-            username="teacher", password="pass", role=User.Role.TEACHER
+            username="teacher",
+            email="teacher@example.com",
+            password="pass",
+            role=User.Role.TEACHER,
         )
         self.student = User.objects.create_user(
-            username="student", password="pass", role=User.Role.STUDENT
+            username="student",
+            email="student@example.com",
+            password="pass",
+            role=User.Role.STUDENT,
         )
         self.classroom = Classroom.objects.create(name="Math", teacher=self.teacher)
         self.quiz = Quiz.objects.create(title="Quiz 1", classroom=self.classroom)
@@ -416,7 +467,10 @@ class QuestionSerializerTest(TestCase):
 class QuizSerializerTest(TestCase):
     def setUp(self):
         self.teacher = User.objects.create_user(
-            username="teacher", password="pass", role=User.Role.TEACHER
+            username="teacher",
+            email="teacher@example.com",
+            password="pass",
+            role=User.Role.TEACHER,
         )
         self.classroom = Classroom.objects.create(name="Math", teacher=self.teacher)
 
@@ -489,10 +543,16 @@ class QuizSerializerTest(TestCase):
 class StudentAnswerSerializerTest(TestCase):
     def setUp(self):
         self.teacher = User.objects.create_user(
-            username="teacher", password="pass", role=User.Role.TEACHER
+            username="teacher",
+            email="teacher@example.com",
+            password="pass",
+            role=User.Role.TEACHER,
         )
         self.student = User.objects.create_user(
-            username="student", password="pass", role=User.Role.STUDENT
+            username="student",
+            email="student@example.com",
+            password="pass",
+            role=User.Role.STUDENT,
         )
         self.classroom = Classroom.objects.create(name="Math", teacher=self.teacher)
         self.quiz = Quiz.objects.create(title="Quiz 1", classroom=self.classroom)
@@ -569,10 +629,16 @@ class StudentAnswersSubmitSerializerTest(TestCase):
 class StudentQuestionAttemptSerializerTest(TestCase):
     def setUp(self):
         self.teacher = User.objects.create_user(
-            username="teacher", password="pass", role=User.Role.TEACHER
+            username="teacher",
+            email="teacher@example.com",
+            password="pass",
+            role=User.Role.TEACHER,
         )
         self.student = User.objects.create_user(
-            username="student", password="pass", role=User.Role.STUDENT
+            username="student",
+            email="student@example.com",
+            password="pass",
+            role=User.Role.STUDENT,
         )
         self.classroom = Classroom.objects.create(name="Math", teacher=self.teacher)
         self.quiz = Quiz.objects.create(title="Quiz 1", classroom=self.classroom)
@@ -609,10 +675,16 @@ class StudentQuestionAttemptSerializerTest(TestCase):
 class StudentQuizAttemptSerializerTest(TestCase):
     def setUp(self):
         self.teacher = User.objects.create_user(
-            username="teacher", password="pass", role=User.Role.TEACHER
+            username="teacher",
+            email="teacher@example.com",
+            password="pass",
+            role=User.Role.TEACHER,
         )
         self.student = User.objects.create_user(
-            username="student", password="pass", role=User.Role.STUDENT
+            username="student",
+            email="student@example.com",
+            password="pass",
+            role=User.Role.STUDENT,
         )
         self.classroom = Classroom.objects.create(name="Math", teacher=self.teacher)
         self.quiz = Quiz.objects.create(title="Quiz 1", classroom=self.classroom)
@@ -643,10 +715,16 @@ class StudentQuizAttemptSerializerTest(TestCase):
 class SQANextQuestionSerializerTest(TestCase):
     def setUp(self):
         self.teacher = User.objects.create_user(
-            username="teacher", password="pass", role=User.Role.TEACHER
+            username="teacher",
+            email="teacher@example.com",
+            password="pass",
+            role=User.Role.TEACHER,
         )
         self.student = User.objects.create_user(
-            username="student", password="pass", role=User.Role.STUDENT
+            username="student",
+            email="student@example.com",
+            password="pass",
+            role=User.Role.STUDENT,
         )
         self.classroom = Classroom.objects.create(name="Math", teacher=self.teacher)
         self.quiz = Quiz.objects.create(title="Quiz 1", classroom=self.classroom)
@@ -696,7 +774,10 @@ class SQANextQuestionSerializerTest(TestCase):
 class EnrollmentCodeSerializerTest(TestCase):
     def setUp(self):
         self.teacher = User.objects.create_user(
-            username="teacher", password="pass", role=User.Role.TEACHER
+            username="teacher",
+            email="teacher@example.com",
+            password="pass",
+            role=User.Role.TEACHER,
         )
         self.classroom = Classroom.objects.create(name="Math", teacher=self.teacher)
 
@@ -727,7 +808,10 @@ class EnrollmentCodeSerializerTest(TestCase):
 class EnrollmentCodePutSerializerTest(TestCase):
     def setUp(self):
         self.teacher = User.objects.create_user(
-            username="teacher", password="pass", role=User.Role.TEACHER
+            username="teacher",
+            email="teacher@example.com",
+            password="pass",
+            role=User.Role.TEACHER,
         )
         self.classroom = Classroom.objects.create(name="Math", teacher=self.teacher)
 
@@ -802,7 +886,10 @@ class EnrollSerializerTest(TestCase):
 class TeacherStatsSerializersTest(TestCase):
     def setUp(self):
         self.teacher = User.objects.create_user(
-            username="teacher", password="pass", role=User.Role.TEACHER
+            username="teacher",
+            email="teacher@example.com",
+            password="pass",
+            role=User.Role.TEACHER,
         )
         self.student = User.objects.create_user(
             username="student",
@@ -926,10 +1013,16 @@ class ActivateUserViewTest(APITestCase):
 class PermissionTests(TestCase):
     def setUp(self):
         self.teacher = User.objects.create_user(
-            username="teacher", password="pass", role=User.Role.TEACHER
+            username="teacher",
+            email="teacher@example.com",
+            password="pass",
+            role=User.Role.TEACHER,
         )
         self.student = User.objects.create_user(
-            username="student", password="pass", role=User.Role.STUDENT
+            username="student",
+            email="student@example.com",
+            password="pass",
+            role=User.Role.STUDENT,
         )
         self.anonymous_user = Mock()
         self.anonymous_user.is_authenticated = False

@@ -21,10 +21,16 @@ class UserModelTest(TestCase):
     def test_create_teacher_and_student(self):
         """Test creating users with different roles"""
         teacher = User.objects.create_user(
-            username="teacher1", password="pass", role=User.Role.TEACHER
+            username="teacher1",
+            email="teacher1@example.com",
+            password="pass",
+            role=User.Role.TEACHER,
         )
         student = User.objects.create_user(
-            username="student1", password="pass", role=User.Role.STUDENT
+            username="student1",
+            email="student1@example.com",
+            password="pass",
+            role=User.Role.STUDENT,
         )
         self.assertEqual(teacher.role, User.Role.TEACHER)
         self.assertEqual(student.role, User.Role.STUDENT)
@@ -45,7 +51,9 @@ class UserModelTest(TestCase):
 
     def test_user_without_role(self):
         """Test creating user without specifying role"""
-        user = User.objects.create_user(username="test_user", password="pass")
+        user = User.objects.create_user(
+            username="test_user", email="test_user@example.com", password="pass"
+        )
         self.assertEqual(user.role, "")  # Default empty string
 
     def test_user_inheritance(self):
@@ -62,17 +70,45 @@ class UserModelTest(TestCase):
         self.assertEqual(user.first_name, "Test")
         self.assertEqual(user.last_name, "User")
 
+    def test_unique_email_constraint(self):
+        """Test that email field has unique constraint"""
+        # Create first user
+        User.objects.create_user(
+            username="user1",
+            email="test@example.com",
+            password="pass",
+            role=User.Role.TEACHER,
+        )
+
+        # Try to create another user with the same email
+        with self.assertRaises(Exception):  # IntegrityError
+            User.objects.create_user(
+                username="user2",
+                email="test@example.com",
+                password="pass",
+                role=User.Role.STUDENT,
+            )
+
 
 class ClassroomModelTest(TestCase):
     def setUp(self):
         self.teacher = User.objects.create_user(
-            username="teacher", password="pass", role=User.Role.TEACHER
+            username="teacher",
+            email="teacher@example.com",
+            password="pass",
+            role=User.Role.TEACHER,
         )
         self.student1 = User.objects.create_user(
-            username="student1", password="pass", role=User.Role.STUDENT
+            username="student1",
+            email="student1@example.com",
+            password="pass",
+            role=User.Role.STUDENT,
         )
         self.student2 = User.objects.create_user(
-            username="student2", password="pass", role=User.Role.STUDENT
+            username="student2",
+            email="student2@example.com",
+            password="pass",
+            role=User.Role.STUDENT,
         )
 
     def test_create_classroom(self):
@@ -148,7 +184,10 @@ class ClassroomModelTest(TestCase):
 class QuizModelTest(TestCase):
     def setUp(self):
         self.teacher = User.objects.create_user(
-            username="teacher", password="pass", role=User.Role.TEACHER
+            username="teacher",
+            email="teacher@example.com",
+            password="pass",
+            role=User.Role.TEACHER,
         )
         self.classroom = Classroom.objects.create(name="Math", teacher=self.teacher)
 
@@ -236,7 +275,10 @@ class QuizModelTest(TestCase):
 class QuestionModelTest(TestCase):
     def setUp(self):
         self.teacher = User.objects.create_user(
-            username="teacher", password="pass", role=User.Role.TEACHER
+            username="teacher",
+            email="teacher@example.com",
+            password="pass",
+            role=User.Role.TEACHER,
         )
         self.classroom = Classroom.objects.create(name="Math", teacher=self.teacher)
         self.quiz = Quiz.objects.create(title="Quiz 1", classroom=self.classroom)
@@ -351,7 +393,10 @@ class QuestionModelTest(TestCase):
 class AnswerModelTest(TestCase):
     def setUp(self):
         self.teacher = User.objects.create_user(
-            username="teacher", password="pass", role=User.Role.TEACHER
+            username="teacher",
+            email="teacher@example.com",
+            password="pass",
+            role=User.Role.TEACHER,
         )
         self.classroom = Classroom.objects.create(name="Math", teacher=self.teacher)
         self.quiz = Quiz.objects.create(title="Quiz 1", classroom=self.classroom)
@@ -449,10 +494,16 @@ class AnswerModelTest(TestCase):
 class StudentQuizAttemptModelTest(TestCase):
     def setUp(self):
         self.teacher = User.objects.create_user(
-            username="teacher", password="pass", role=User.Role.TEACHER
+            username="teacher",
+            email="teacher@example.com",
+            password="pass",
+            role=User.Role.TEACHER,
         )
         self.student = User.objects.create_user(
-            username="student", password="pass", role=User.Role.STUDENT
+            username="student",
+            email="student@example.com",
+            password="pass",
+            role=User.Role.STUDENT,
         )
         self.classroom = Classroom.objects.create(name="Math", teacher=self.teacher)
         self.quiz = Quiz.objects.create(title="Quiz 1", classroom=self.classroom)
@@ -625,10 +676,16 @@ class StudentQuizAttemptModelTest(TestCase):
 class StudentQuestionAttemptModelTest(TestCase):
     def setUp(self):
         self.teacher = User.objects.create_user(
-            username="teacher", password="pass", role=User.Role.TEACHER
+            username="teacher",
+            email="teacher@example.com",
+            password="pass",
+            role=User.Role.TEACHER,
         )
         self.student = User.objects.create_user(
-            username="student", password="pass", role=User.Role.STUDENT
+            username="student",
+            email="student@example.com",
+            password="pass",
+            role=User.Role.STUDENT,
         )
         self.classroom = Classroom.objects.create(name="Math", teacher=self.teacher)
         self.quiz = Quiz.objects.create(title="Quiz 1", classroom=self.classroom)
@@ -682,7 +739,10 @@ class StudentQuestionAttemptModelTest(TestCase):
     def test_same_question_different_attempts(self):
         """Test same question can be attempted by different quiz attempts"""
         student2 = User.objects.create_user(
-            username="student2", password="pass", role=User.Role.STUDENT
+            username="student2",
+            email="student2@example.com",
+            password="pass",
+            role=User.Role.STUDENT,
         )
         quiz_attempt2 = StudentQuizAttempt.objects.create(
             student=student2, quiz=self.quiz
@@ -751,10 +811,16 @@ class StudentQuestionAttemptModelTest(TestCase):
 class StudentAnswerModelTest(TestCase):
     def setUp(self):
         self.teacher = User.objects.create_user(
-            username="teacher", password="pass", role=User.Role.TEACHER
+            username="teacher",
+            email="teacher@example.com",
+            password="pass",
+            role=User.Role.TEACHER,
         )
         self.student = User.objects.create_user(
-            username="student", password="pass", role=User.Role.STUDENT
+            username="student",
+            email="student@example.com",
+            password="pass",
+            role=User.Role.STUDENT,
         )
         self.classroom = Classroom.objects.create(name="Math", teacher=self.teacher)
         self.quiz = Quiz.objects.create(title="Quiz 1", classroom=self.classroom)
@@ -1006,7 +1072,10 @@ class StudentAnswerModelTest(TestCase):
 class EnrollmentCodeModelTest(TestCase):
     def setUp(self):
         self.teacher = User.objects.create_user(
-            username="teacher", password="pass", role=User.Role.TEACHER
+            username="teacher",
+            email="teacher@example.com",
+            password="pass",
+            role=User.Role.TEACHER,
         )
         self.classroom = Classroom.objects.create(name="Math", teacher=self.teacher)
 

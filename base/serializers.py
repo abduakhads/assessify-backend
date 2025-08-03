@@ -22,11 +22,21 @@ class CustomUserCreateSerializer(UserCreateSerializer):
     class Meta(UserCreateSerializer.Meta):
         fields = ["id", "username", "email", "password", "role"]
 
+    def validate_email(self, value):
+        """Validate that email is unique."""
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("A user with this email already exists.")
+        return value
+
 
 class BaseUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ["id", "username", "first_name", "last_name", "role"]
+        extra_kwargs = {
+            "role": {"read_only": True},
+            "username": {"read_only": True},
+        }
 
 
 class ClassroomSerializer(serializers.ModelSerializer):
@@ -73,6 +83,31 @@ class AnswerSerializer(serializers.ModelSerializer):
                 }
             )
         return attrs
+
+    def validate_text(self, value):
+        if value:
+            value = value.strip()
+
+        # Get the question from the request data
+        request = self.context.get("request")
+        if request and hasattr(request, "data"):
+            question_id = request.data.get("question")
+            if question_id:
+                try:
+                    question = Question.objects.get(pk=question_id)
+
+                    qs = Answer.objects.filter(question=question, text=value)
+                    if self.instance:
+                        qs = qs.exclude(pk=self.instance.pk)
+
+                    if qs.exists():
+                        raise serializers.ValidationError(
+                            "An answer with this text already exists for the selected question."
+                        )
+                except Question.DoesNotExist:
+                    pass
+
+        return value
 
     question = serializers.PrimaryKeyRelatedField(queryset=Question.objects.all())
 
@@ -199,7 +234,7 @@ class StudentAnswersSubmitSerializer(serializers.Serializer):
     #         )
     #         student_answers.append(answer)
 
-    # return student_answers
+    #     return student_answers
 
 
 class StudentQuestionAttemptSerializer(serializers.ModelSerializer):
