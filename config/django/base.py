@@ -143,7 +143,7 @@ REST_FRAMEWORK = {
 
 DJOSER = {
     "TOKEN_MODEL": None,
-    "PASSWORD_RESET_CONFIRM_URL": "password/reset/confirm/{uid}/{token}",
+    "PASSWORD_RESET_CONFIRM_URL": "reset/password/confirm/{uid}/{token}",
     "USERNAME_RESET_CONFIRM_URL": "username/reset/confirm/{uid}/{token}",
     "ACTIVATION_URL": "auth/activate/{uid}/{token}",
     "SEND_ACTIVATION_EMAIL": True,
@@ -154,6 +154,7 @@ DJOSER = {
     },
     "EMAIL": {
         "activation": "base.email.AwesomeActivationEmail",
+        "password_reset": "base.email.AwesomePasswordResetEmail",
     },
     "EMAIL_FRONTEND_DOMAIN": "assessify.app",
     "EMAIL_FRONTEND_SITE_NAME": "Assessify",

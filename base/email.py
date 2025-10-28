@@ -1,6 +1,6 @@
 # myapp/email.py
 
-from djoser.email import ActivationEmail
+from djoser.email import ActivationEmail, PasswordResetEmail
 from django.conf import settings
 
 
@@ -39,6 +39,47 @@ class AwesomeActivationEmail(ActivationEmail):
 
             protocol = "https" if not settings.DEBUG else "http"
             context["activation_url"] = (
+                f"{protocol}://{frontend_domain}/{formatted_path}"
+            )
+
+        return context
+
+
+class AwesomePasswordResetEmail(PasswordResetEmail):
+    template_name = "email/reset_password.html"
+    subject_template_name = None  # get_subject
+
+    def get_subject(self):
+        site_name = getattr(settings, "DJOSER", {}).get(
+            "EMAIL_FRONTEND_SITE_NAME", "Assessify"
+        )
+        return f"Reset your {site_name} password"
+
+    def get_context_data(self):
+        context = super().get_context_data()
+
+        context.update(
+            {
+                "site_name": getattr(settings, "DJOSER", {}).get(
+                    "EMAIL_FRONTEND_SITE_NAME", "Assessify"
+                ),
+            }
+        )
+
+        if "uid" in context and "token" in context:
+            frontend_domain = getattr(settings, "DJOSER", {}).get(
+                "EMAIL_FRONTEND_DOMAIN", "localhost:3000"
+            )
+            password_reset_path = getattr(settings, "DJOSER", {}).get(
+                "PASSWORD_RESET_CONFIRM_URL", "reset/password/confirm/{uid}/{token}"
+            )
+
+            formatted_path = password_reset_path.format(
+                uid=context["uid"], token=context["token"]
+            )
+
+            protocol = "https" if not settings.DEBUG else "http"
+            context["password_reset_url"] = (
                 f"{protocol}://{frontend_domain}/{formatted_path}"
             )
 
