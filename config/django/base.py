@@ -157,6 +157,7 @@ DJOSER = {
         "password_reset": "base.email.AwesomePasswordResetEmail",
     },
     "EMAIL_FRONTEND_DOMAIN": "assessify.app",
+    "EMAIL_BACKEND_DOMAIN": "api.assessify.app",
     "EMAIL_FRONTEND_SITE_NAME": "Assessify",
 }
 

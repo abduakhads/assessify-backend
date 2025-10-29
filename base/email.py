@@ -17,11 +17,18 @@ class AwesomeActivationEmail(ActivationEmail):
     def get_context_data(self):
         context = super().get_context_data()
 
+        protocol = "https" if not settings.DEBUG else "http"
+        backend_domain = getattr(settings, "DJOSER", {}).get(
+            "EMAIL_BACKEND_DOMAIN", "localhost:8000"
+        )
+
         context.update(
             {
                 "site_name": getattr(settings, "DJOSER", {}).get(
                     "EMAIL_FRONTEND_SITE_NAME", "Assessify"
                 ),
+                "protocol": protocol,
+                "domain": backend_domain,
             }
         )
 
@@ -37,7 +44,6 @@ class AwesomeActivationEmail(ActivationEmail):
                 uid=context["uid"], token=context["token"]
             )
 
-            protocol = "https" if not settings.DEBUG else "http"
             context["activation_url"] = (
                 f"{protocol}://{frontend_domain}/{formatted_path}"
             )
@@ -58,11 +64,18 @@ class AwesomePasswordResetEmail(PasswordResetEmail):
     def get_context_data(self):
         context = super().get_context_data()
 
+        protocol = "https" if not settings.DEBUG else "http"
+        backend_domain = getattr(settings, "DJOSER", {}).get(
+            "EMAIL_BACKEND_DOMAIN", "localhost:8000"
+        )
+
         context.update(
             {
                 "site_name": getattr(settings, "DJOSER", {}).get(
                     "EMAIL_FRONTEND_SITE_NAME", "Assessify"
                 ),
+                "protocol": protocol,
+                "domain": backend_domain,
             }
         )
 
@@ -78,7 +91,6 @@ class AwesomePasswordResetEmail(PasswordResetEmail):
                 uid=context["uid"], token=context["token"]
             )
 
-            protocol = "https" if not settings.DEBUG else "http"
             context["password_reset_url"] = (
                 f"{protocol}://{frontend_domain}/{formatted_path}"
             )
