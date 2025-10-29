@@ -254,6 +254,7 @@ class StudentQuestionAttemptSerializer(serializers.ModelSerializer):
 
 
 class StudentQuizAttemptSerializer(serializers.ModelSerializer):
+    quiz_name = serializers.CharField(source="quiz.title", read_only=True)
 
     class Meta:
         model = StudentQuizAttempt
@@ -264,6 +265,7 @@ class StudentQuizAttemptSerializer(serializers.ModelSerializer):
             "started_at",
             "completed_at",
             "score",
+            "quiz_name",
         ]
         extra_kwargs = {
             "student": {"read_only": True},

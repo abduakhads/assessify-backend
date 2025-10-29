@@ -122,7 +122,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = "static/"
+STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
 # Default primary key field type
@@ -156,8 +156,8 @@ DJOSER = {
         "activation": "base.email.AwesomeActivationEmail",
         "password_reset": "base.email.AwesomePasswordResetEmail",
     },
-    "EMAIL_FRONTEND_DOMAIN": "assessify.app",
-    "EMAIL_BACKEND_DOMAIN": "api.assessify.app",
+    "EMAIL_FRONTEND_DOMAIN": env.str("FRONTEND_DOMAIN", "localhost:3000"),
+    "EMAIL_BACKEND_DOMAIN": env.str("BACKEND_DOMAIN", "localhost:8000"),
     "EMAIL_FRONTEND_SITE_NAME": "Assessify",
 }
 

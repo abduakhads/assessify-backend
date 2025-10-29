@@ -21,6 +21,7 @@ class AwesomeActivationEmail(ActivationEmail):
         backend_domain = getattr(settings, "DJOSER", {}).get(
             "EMAIL_BACKEND_DOMAIN", "localhost:8000"
         )
+        static_url = settings.STATIC_URL
 
         context.update(
             {
@@ -29,6 +30,7 @@ class AwesomeActivationEmail(ActivationEmail):
                 ),
                 "protocol": protocol,
                 "domain": backend_domain,
+                "static_url": static_url,
             }
         )
 
@@ -68,6 +70,7 @@ class AwesomePasswordResetEmail(PasswordResetEmail):
         backend_domain = getattr(settings, "DJOSER", {}).get(
             "EMAIL_BACKEND_DOMAIN", "localhost:8000"
         )
+        static_url = settings.STATIC_URL
 
         context.update(
             {
@@ -76,6 +79,7 @@ class AwesomePasswordResetEmail(PasswordResetEmail):
                 ),
                 "protocol": protocol,
                 "domain": backend_domain,
+                "static_url": static_url,
             }
         )
 
