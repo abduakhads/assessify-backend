@@ -18,9 +18,12 @@ SECURE_HSTS_PRELOAD = True
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 
 # Enable on proxy only
-# SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"] = ("rest_framework.renderers.JSONRenderer",)
 
 # For error reporting, DJANGO_ADMINS=Blake:blake@cyb.org,Alice:alice@cyb.org
 ADMINS = [x.split(":") for x in env.list("DJANGO_ADMINS", default=[])]
+
+
+STATIC_URL = env.str("DJANGO_STATIC_URL", "/static/")
