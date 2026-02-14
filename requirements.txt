@@ -9,3 +9,4 @@ django-filter==25.2
 django-silk==5.4.3
 gunicorn==24.1.1
 psycopg[binary]
+cryptography>=46.0.5
