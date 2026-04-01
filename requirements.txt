@@ -6,7 +6,7 @@ django-environ==0.13.0
 django-cors-headers==4.9.0
 djoser==2.3.3
 django-filter==25.2
-django-silk==5.4.3
+django-silk==5.5.0
 gunicorn==25.1.0
 psycopg[binary]
 cryptography>=46.0.5
