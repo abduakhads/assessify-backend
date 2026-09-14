@@ -4,7 +4,7 @@ djangorestframework_simplejwt==5.5.1
 drf-spectacular==0.30.0
 django-environ==0.14.0
 django-cors-headers==4.9.0
-djoser==2.3.3
+djoser==2.3.4
 django-filter==26.1
 django-silk==5.5.0
 gunicorn==26.2.0
